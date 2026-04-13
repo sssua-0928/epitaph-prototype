@@ -1596,7 +1596,7 @@ function renderGraves() {
       <div class="grave-name">${g.name}</div>
       <div class="grave-year">${g.period}</div>
       ${canOffer
-        ? `<button class="offering-btn available" onclick="event.stopPropagation()">💐 헌화하기</button>`
+        ? `<button class="offering-btn available" onclick="event.stopPropagation(); doOffering(${i})">💐 헌화하기</button>`
         : `<button class="offering-btn cooldown" onclick="event.stopPropagation()">⏳ ${cdText}</button>`
       }
     </div>`;
@@ -1823,6 +1823,19 @@ if (dauEl) {
 }
 
 // Grave detail sheet
+// Offering (헌화)
+function doOffering(idx) {
+  const g = GRAVES_DATA[idx];
+  if (!g || g.cooldownMin > 0) return;
+  // Set 12h cooldown (720 minutes)
+  g.cooldownMin = 720;
+  // Add petals
+  const eco = calcEconomy();
+  showToast(`${g.name}에게 헌화했어요 💐 +${state.rewardAdPetal}꽃잎`);
+  // Re-render
+  render();
+}
+
 // Register form
 function openRegister() {
   document.getElementById('registerOverlay').classList.add('open');
