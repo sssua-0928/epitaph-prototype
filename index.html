@@ -923,9 +923,9 @@
           <span class="status-label">오늘 출석</span>
         </div>
         <div class="status-item">
-          <span class="status-icon">🎬</span>
-          <span class="status-value" id="statusAdLeft">2/<span id="statusAdMax">3</span></span>
-          <span class="status-label">광고 남음</span>
+          <span class="status-icon">💐</span>
+          <span class="status-value" id="statusAdLeft">7기</span>
+          <span class="status-label">헌화 가능</span>
         </div>
       </div>
 
@@ -942,9 +942,9 @@
           <span class="action-sub">+<span id="actionAttend">3</span>꽃잎</span>
         </button>
         <button class="action-btn petal-action">
-          <span class="action-icon">🎬</span>
-          <span class="action-label">꽃잎 충전</span>
-          <span class="action-sub">광고 <span id="actionAdLeft">2</span>회 남음</span>
+          <span class="action-icon">💐</span>
+          <span class="action-label">헌화하기</span>
+          <span class="action-sub">묘비당 12h</span>
         </button>
         <button class="action-btn exchange">
           <span class="action-icon">💎</span>
@@ -1093,25 +1093,21 @@
         <div class="option-group">
           <div class="option-label">리워드 광고 1회당 꽃잎</div>
           <div class="pill-group">
-            <button class="pill-btn" data-key="rewardAdPetal" data-val="3" onclick="setPill(this,'rewardAdPetal',3)">3꽃잎</button>
-            <button class="pill-btn selected" data-key="rewardAdPetal" data-val="5" onclick="setPill(this,'rewardAdPetal',5)">5꽃잎 <span class="v2-badge">v2</span></button>
-            <button class="pill-btn" data-key="rewardAdPetal" data-val="10" onclick="setPill(this,'rewardAdPetal',10)">10꽃잎</button>
+            <button class="pill-btn" data-key="rewardAdPetal" data-val="5" onclick="setPill(this,'rewardAdPetal',5)">5꽃잎</button>
+            <button class="pill-btn selected" data-key="rewardAdPetal" data-val="10" onclick="setPill(this,'rewardAdPetal',10)">10꽃잎 <span class="v2-badge">v2</span></button>
+            <button class="pill-btn" data-key="rewardAdPetal" data-val="15" onclick="setPill(this,'rewardAdPetal',15)">15꽃잎</button>
           </div>
         </div>
         <div class="option-group">
           <div class="option-label">일일 광고 시청 상한</div>
-          <div class="pill-group">
-            <button class="pill-btn selected" data-key="dailyAdCap" data-val="3" onclick="setPill(this,'dailyAdCap',3)">3회 <span class="v2-badge">v2</span></button>
-            <button class="pill-btn" data-key="dailyAdCap" data-val="5" onclick="setPill(this,'dailyAdCap',5)">5회</button>
-            <button class="pill-btn" data-key="dailyAdCap" data-val="99" onclick="setPill(this,'dailyAdCap',99)">무제한</button>
-          </div>
+          <div style="font-size:13px;color:var(--text-secondary);padding:6px 0;line-height:1.5;">헌화 기반: 묘비당 12h마다 1회 (일일 상한 없음)</div>
         </div>
         <div class="option-group">
           <div class="option-label">출석 보상</div>
           <div class="pill-group">
-            <button class="pill-btn" data-key="attendanceReward" data-val="1" onclick="setPill(this,'attendanceReward',1)">1꽃잎</button>
-            <button class="pill-btn selected" data-key="attendanceReward" data-val="3" onclick="setPill(this,'attendanceReward',3)">3꽃잎 <span class="v2-badge">v2</span></button>
-            <button class="pill-btn" data-key="attendanceReward" data-val="5" onclick="setPill(this,'attendanceReward',5)">5꽃잎</button>
+            <button class="pill-btn" data-key="attendanceReward" data-val="3" onclick="setPill(this,'attendanceReward',3)">3꽃잎</button>
+            <button class="pill-btn selected" data-key="attendanceReward" data-val="5" onclick="setPill(this,'attendanceReward',5)">5꽃잎 <span class="v2-badge">v2</span></button>
+            <button class="pill-btn" data-key="attendanceReward" data-val="10" onclick="setPill(this,'attendanceReward',10)">10꽃잎</button>
           </div>
         </div>
         <div class="option-group">
@@ -1135,9 +1131,9 @@
         <div class="option-group">
           <div class="option-label">무료 제공 수</div>
           <div class="pill-group">
-            <button class="pill-btn" data-key="freeGraves" data-val="5" onclick="setPill(this,'freeGraves',5)">5기</button>
-            <button class="pill-btn selected" data-key="freeGraves" data-val="10" onclick="setPill(this,'freeGraves',10)">10기 <span class="v2-badge">v2</span></button>
-            <button class="pill-btn" data-key="freeGraves" data-val="15" onclick="setPill(this,'freeGraves',15)">15기</button>
+            <button class="pill-btn" data-key="freeGraves" data-val="3" onclick="setPill(this,'freeGraves',3)">3기</button>
+            <button class="pill-btn selected" data-key="freeGraves" data-val="5" onclick="setPill(this,'freeGraves',5)">5기 <span class="v2-badge">v2</span></button>
+            <button class="pill-btn" data-key="freeGraves" data-val="10" onclick="setPill(this,'freeGraves',10)">10기</button>
           </div>
         </div>
         <div class="option-group">
@@ -1150,11 +1146,11 @@
           </div>
         </div>
         <div class="option-group">
-          <div class="option-label">추가 구매 단위 (30꽃잎당)</div>
+          <div class="option-label">추가 구매 단위 (1기당 꽃잎)</div>
           <div class="pill-group">
-            <button class="pill-btn" data-key="purchaseUnit" data-val="3" onclick="setPill(this,'purchaseUnit',3)">+3기</button>
-            <button class="pill-btn selected" data-key="purchaseUnit" data-val="5" onclick="setPill(this,'purchaseUnit',5)">+5기 <span class="v2-badge">v2</span></button>
-            <button class="pill-btn" data-key="purchaseUnit" data-val="10" onclick="setPill(this,'purchaseUnit',10)">+10기</button>
+            <button class="pill-btn" data-key="purchaseUnit" data-val="10" onclick="setPill(this,'purchaseUnit',10)">10꽃잎</button>
+            <button class="pill-btn selected" data-key="purchaseUnit" data-val="15" onclick="setPill(this,'purchaseUnit',15)">15꽃잎 <span class="v2-badge">v2</span></button>
+            <button class="pill-btn" data-key="purchaseUnit" data-val="20" onclick="setPill(this,'purchaseUnit',20)">20꽃잎</button>
           </div>
         </div>
       </div>
@@ -1237,13 +1233,13 @@
 
 <script>
 const state = {
-  rewardAdPetal: 5,
-  dailyAdCap: 3,
-  attendanceReward: 3,
+  rewardAdPetal: 10,
+  dailyAdCap: 99,
+  attendanceReward: 5,
   conversionRatio: '100=10',
-  freeGraves: 10,
+  freeGraves: 5,
   maxCap: 50,
-  purchaseUnit: 5,
+  purchaseUnit: 15,
   reviewMethod: 'ai',
   uploadRestriction: 'photo',
   tossPointPhase1: true,
@@ -1265,16 +1261,15 @@ const GRAVES_DATA = [
 // Economy calculation
 function calcEconomy() {
   const adPetal = state.rewardAdPetal;
-  const cap = state.dailyAdCap === 99 ? 5 : state.dailyAdCap; // 무제한 → 실사용율 5회로 가정
-
-  const dailyAd = adPetal * cap;
+  const graves = GRAVES_DATA.length; // 보유 묘비 수 (샘플 7개)
+  const dailyAd = adPetal * graves; // 묘비당 1회 헌화 = 묘비 수 × 꽃잎
   const dailyAttend = state.attendanceReward;
   const dailyTotal = dailyAd + dailyAttend;
 
   const weeklyAd = dailyAd * 7;
   const weeklyAttend = dailyAttend * 7;
-  const weeklyBonus = 5 + 15; // 3일연속+7일연속
-  const weeklyTotal = weeklyAd + weeklyAttend + weeklyBonus;
+  const weeklyBonus = 0; // 연속 보너스 삭제
+  const weeklyTotal = weeklyAd + weeklyAttend;
 
   const monthlyTotal = Math.round(weeklyTotal * 4.3);
 
@@ -1282,13 +1277,15 @@ function calcEconomy() {
 }
 
 function calcRevenue(dau) {
-  const rewardCap = state.dailyAdCap === 99 ? 5 : state.dailyAdCap;
-  // 전면광고: 1.5회/day × 3원, 리워드: cap회 × 3.2원
-  const perDau = 1.5 * 3 + rewardCap * 3.2;
+  // 전면광고: 2회/day × 3원
+  // 헌화 리워드: 평균 3회/DAU × 2.8원 (eCPM 약간 할인)
+  const interstitialRev = 2 * 3;
+  const rewardRev = 3 * 2.8;
+  const perDau = interstitialRev + rewardRev;
   const daily = Math.round(dau * perDau);
   const monthly = daily * 30;
-  const coverage = Math.round((monthly / 180000) * 100);
-  return { daily, monthly, coverage };
+  const claudeCover = Math.round(monthly / 180000 * 100);
+  return { daily, monthly, claudeCover };
 }
 
 function formatNum(n) {
@@ -1427,10 +1424,10 @@ function renderEconomy() {
 }
 
 function renderRevenue() {
-  const { daily, monthly, coverage } = calcRevenue(state.dau);
+  const { daily, monthly, claudeCover } = calcRevenue(state.dau);
   document.getElementById('revDaily').textContent = formatNum(daily);
   document.getElementById('revMonthly').textContent = formatNum(monthly);
-  document.getElementById('revCoverage').textContent = coverage + '%';
+  document.getElementById('revCoverage').textContent = claudeCover + '%';
 
   // Scenario table
   const scenarios = [100, 300, 500, 1000];
@@ -1441,7 +1438,7 @@ function renderRevenue() {
       <td class="dau-col">${d.toLocaleString()}</td>
       <td>${r.daily.toLocaleString()}원</td>
       <td>${formatNum(r.monthly)}원</td>
-      <td>${r.coverage}%</td>
+      <td>${r.claudeCover}%</td>
     </tr>`;
   }).join('');
   document.getElementById('scenarioBody').innerHTML = rows;
@@ -1480,15 +1477,11 @@ function renderPetalBadge() {
   if (sp) sp.textContent = eco.weeklyTotal;
   const smf = document.getElementById('statusMaxFree');
   if (smf) smf.textContent = state.freeGraves;
-  const sam = document.getElementById('statusAdMax');
-  if (sam) sam.textContent = state.dailyAdCap === 99 ? '∞' : state.dailyAdCap;
   const sal = document.getElementById('statusAdLeft');
-  if (sal) sal.innerHTML = (state.dailyAdCap === 99 ? '∞' : '2') + '/<span id="statusAdMax">' + (state.dailyAdCap === 99 ? '∞' : state.dailyAdCap) + '</span>';
+  if (sal) sal.textContent = GRAVES_DATA.length + '기';
   // Action bar updates
   const aa = document.getElementById('actionAttend');
   if (aa) aa.textContent = state.attendanceReward;
-  const aal = document.getElementById('actionAdLeft');
-  if (aal) aal.textContent = state.dailyAdCap === 99 ? '∞' : '2';
   // Exchange visibility
   const ae = document.getElementById('actionExchange');
   if (ae) ae.textContent = state.tossPointPhase1 ? '토스포인트' : 'Phase 2';
