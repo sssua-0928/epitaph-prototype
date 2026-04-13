@@ -235,6 +235,164 @@
     border-color: #FFE082;
   }
 
+  /* ── REGISTER FORM OVERLAY ── */
+  .register-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    z-index: 50;
+    display: none;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .register-overlay.open { display: flex; }
+  .register-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+  .register-back {
+    font-size: 20px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 4px;
+  }
+  .register-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .register-form {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+  }
+  .form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+  .form-group .form-hint {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  .form-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--card);
+    transition: border-color 0.2s;
+  }
+  .form-input:focus { outline: none; border-color: var(--grass); }
+  .form-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: inherit;
+    background: var(--card);
+    resize: none;
+    height: 72px;
+    transition: border-color 0.2s;
+  }
+  .form-textarea:focus { outline: none; border-color: var(--grass); }
+  .char-count {
+    text-align: right;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .category-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .cat-pill {
+    padding: 6px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: var(--card);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .cat-pill.selected {
+    background: #E8F5E9;
+    border-color: var(--grass);
+    color: var(--grass-dark);
+    font-weight: 600;
+  }
+  .photo-upload {
+    width: 100%;
+    height: 80px;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .photo-upload:hover { border-color: var(--grass); }
+  .deco-btn {
+    width: 100%;
+    padding: 12px;
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius-sm);
+    background: #FAFAFA;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-align: center;
+  }
+  .register-submit {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--grass);
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 4px;
+  }
+  .register-submit:active { background: var(--grass-dark); }
+  .toast-msg {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(45,45,45,0.9);
+    color: white;
+    padding: 10px 20px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+  }
+  .toast-msg.show { opacity: 1; }
+
   /* ── CEMETERY TAB ── */
   .cemetery-bg {
     min-height: 100%;
@@ -994,7 +1152,7 @@
             <span class="action-label">포인트 교환</span>
             <span class="action-sub" id="actionExchange">토스포인트</span>
           </button>
-          <button class="action-btn primary">
+          <button class="action-btn primary" onclick="openRegister()">
             <span class="action-icon">➕</span>
             <span class="action-label">묘비 등록</span>
             <span class="action-sub">새로운 기억</span>
@@ -1099,6 +1257,58 @@
   </div>
 
   <!-- TAB BAR REMOVED: replaced by mode switcher -->
+
+  <!-- REGISTER FORM OVERLAY -->
+  <div class="register-overlay" id="registerOverlay">
+    <div class="register-header">
+      <button class="register-back" onclick="closeRegister()">←</button>
+      <div class="register-title">새로운 기억 안치하기</div>
+    </div>
+    <div class="register-form">
+      <div class="form-group">
+        <label>물건 이름 <span class="form-hint">(필수, 20자)</span></label>
+        <input class="form-input" id="regName" type="text" maxlength="20" placeholder="예: 첫 번째 스마트폰">
+      </div>
+      <div class="form-group">
+        <label>에피타프 <span class="form-hint">(필수, 100자)</span></label>
+        <textarea class="form-textarea" id="regEpitaph" maxlength="100" placeholder="이 물건과의 추억을 한 줄로 남겨주세요"></textarea>
+        <div class="char-count"><span id="epitaphCount">0</span>/100</div>
+      </div>
+      <div class="form-group">
+        <label>카테고리 <span class="form-hint">(선택)</span></label>
+        <div class="category-pills">
+          <span class="cat-pill" onclick="selectCat(this)">📱 전자기기</span>
+          <span class="cat-pill" onclick="selectCat(this)">👗 패션</span>
+          <span class="cat-pill" onclick="selectCat(this)">🎁 선물</span>
+          <span class="cat-pill" onclick="selectCat(this)">🧸 인형</span>
+          <span class="cat-pill" onclick="selectCat(this)">📚 문구/책</span>
+          <span class="cat-pill" onclick="selectCat(this)">🏠 생활</span>
+          <span class="cat-pill" onclick="selectCat(this)">🎸 취미</span>
+          <span class="cat-pill" onclick="selectCat(this)">✏️ 직접입력</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>사진 <span class="form-hint">(선택)</span></label>
+        <div class="photo-upload">📷 사진 추가하기</div>
+      </div>
+      <div class="form-group">
+        <label>함께한 기간 <span class="form-hint">(선택)</span></label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input class="form-input" type="text" placeholder="2018.03" style="flex:1">
+          <span style="color:var(--text-muted)">~</span>
+          <input class="form-input" type="text" placeholder="2023.12" style="flex:1">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>꾸미기 <span class="form-hint">(스킨/장식)</span></label>
+        <div class="deco-btn" onclick="alert('준비 중이에요! 🎨\n\nPhase 2에서 묘비 스킨과 장식을 꾸밀 수 있어요.')">🎨 꾸미기 — 준비 중이에요</div>
+      </div>
+      <button class="register-submit" onclick="submitRegister()">안치하기</button>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast-msg" id="toastMsg"></div>
 
   <!-- GRAVE DETAIL OVERLAY -->
   <div class="grave-sheet-overlay" id="graveOverlay" onclick="closeGraveSheet()"></div>
@@ -1613,6 +1823,42 @@ if (dauEl) {
 }
 
 // Grave detail sheet
+// Register form
+function openRegister() {
+  document.getElementById('registerOverlay').classList.add('open');
+}
+function closeRegister() {
+  document.getElementById('registerOverlay').classList.remove('open');
+  // Reset form
+  document.getElementById('regName').value = '';
+  document.getElementById('regEpitaph').value = '';
+  document.getElementById('epitaphCount').textContent = '0';
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('selected'));
+}
+function selectCat(el) {
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function submitRegister() {
+  const name = document.getElementById('regName').value.trim();
+  if (!name) { document.getElementById('regName').focus(); return; }
+  const epitaph = document.getElementById('regEpitaph').value.trim();
+  if (!epitaph) { document.getElementById('regEpitaph').focus(); return; }
+  closeRegister();
+  showToast(`소중한 ${name}이 안치되었어요 🌸`);
+}
+function showToast(msg) {
+  const el = document.getElementById('toastMsg');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// Epitaph char counter
+document.getElementById('regEpitaph').addEventListener('input', function() {
+  document.getElementById('epitaphCount').textContent = this.value.length;
+});
+
 function openGraveDetail(idx) {
   const g = GRAVES_DATA[idx];
   if (!g) return;
