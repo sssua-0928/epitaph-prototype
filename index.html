@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=360, initial-scale=1.0">
+<title>에피타프 Prototype</title>
+<style>
+  :root {
+    --bg: #F0F5E8;
+    --card: #FFFFFF;
+    --petal: #FFB4C8;
+    --petal-light: #FFE0EB;
+    --grass: #8BC34A;
+    --grass-dark: #6A9E36;
+    --accent: #FFD54F;
+    --accent-dark: #F9A825;
+    --text-primary: #2D2D2D;
+    --text-secondary: #757575;
+    --text-muted: #BDBDBD;
+    --border: #E8EFD8;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --radius-pill: 100px;
+    --tabbar-h: 64px;
+    --chips-h: 44px;
+    --sheet-peek: 56px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #D8E8C0;
+    font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 20px 0;
+    gap: 20px;
+  }
+
+  #app {
+    width: 360px;
+    min-height: 740px;
+    max-height: 740px;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+    border-radius: 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HEADER ── */
+  .app-header {
+    background: var(--card);
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 10;
+  }
+  .app-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+  }
+  .app-title span { color: var(--grass-dark); }
+  .petal-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--petal-light);
+    border: 1.5px solid var(--petal);
+    border-radius: var(--radius-pill);
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #C2185B;
+    transition: all 0.3s;
+  }
+
+  /* ── CONFIRMED CHIPS ── */
+  .confirmed-chips {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    position: relative;
+    z-index: 10;
+  }
+  .confirmed-chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex-shrink: 0;
+    background: #EDF7E0;
+    border: 1px solid #C5E1A5;
+    border-radius: var(--radius-pill);
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #558B2F;
+    white-space: nowrap;
+  }
+  .chip.locked::before { content: '✓ '; }
+
+  /* ── CONTENT AREA ── */
+  .content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 16px;
+    scrollbar-width: none;
+  }
+  .content-area::-webkit-scrollbar { display: none; }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── CEMETERY TAB ── */
+  .cemetery-bg {
+    min-height: 100%;
+    background:
+      radial-gradient(ellipse 80% 40% at 50% 100%, #A5D66A 0%, #8BC34A 40%, transparent 70%),
+      linear-gradient(180deg, #E8F5D0 0%, #D4EBB0 100%);
+    padding: 20px 16px 24px;
+    position: relative;
+  }
+  .cemetery-bg::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 80px;
+    background: linear-gradient(180deg, transparent, #8BC34A40);
+  }
+
+  .graves-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .grave-slot {
+    aspect-ratio: 3/4;
+    border-radius: var(--radius-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+    padding: 8px 6px;
+  }
+  .grave-slot:active { transform: scale(0.96); }
+
+  .grave-slot.free {
+    background: var(--card);
+    border: 2px solid #C5E1A5;
+    box-shadow: var(--shadow);
+  }
+  .grave-slot.extra {
+    background: rgba(255,255,255,0.5);
+    border: 2px dashed #A5C880;
+  }
+  .grave-slot.add-slot {
+    background: rgba(255,255,255,0.3);
+    border: 2px dashed #C5E1A5;
+  }
+  .grave-slot.overflow-slot {
+    background: rgba(255,255,255,0.25);
+    border: 2px dashed #D4E8B8;
+    font-size: 18px;
+    font-weight: 700;
+    color: #6A9E36;
+  }
+
+  .grave-emoji {
+    font-size: 22px;
+    line-height: 1;
+    transition: filter 0.3s;
+  }
+  .grave-emoji.greyed { filter: grayscale(1) opacity(0.4); }
+
+  .grave-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: center;
+    line-height: 1.2;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .grave-name.greyed { color: var(--text-muted); }
+
+  .grave-year {
+    font-size: 9px;
+    color: var(--text-secondary);
+  }
+
+  .wilted-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: #FF6B6B;
+    border-radius: var(--radius-pill);
+    padding: 1px 5px;
+    font-size: 8px;
+    color: white;
+    font-weight: 600;
+  }
+
+  .phase2-badge {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: #E3F2FD;
+    border: 1px solid #90CAF9;
+    border-radius: var(--radius-pill);
+    padding: 1px 5px;
+    font-size: 7px;
+    color: #1565C0;
+    font-weight: 700;
+  }
+
+  .v2-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #1976D2;
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  .grave-decoration {
+    position: absolute;
+    bottom: 5px;
+    font-size: 10px;
+    transition: filter 0.3s, opacity 0.3s;
+  }
+  .grave-decoration.phase2-off {
+    filter: grayscale(1) opacity(0.35);
+  }
+
+  .add-slot-label {
+    font-size: 10px;
+    color: #6A9E36;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  /* ── ECONOMY TAB ── */
+  .economy-content {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .economy-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .economy-table th {
+    text-align: left;
+    color: var(--text-secondary);
+    font-weight: 600;
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+  }
+  .economy-table td {
+    padding: 6px 6px;
+    color: var(--text-primary);
+    border-bottom: 1px solid #F5F5F5;
+    font-size: 12px;
+  }
+  .economy-table tr:last-child td { border-bottom: none; }
+  .economy-table td.total {
+    font-weight: 700;
+    color: #C2185B;
+  }
+  .economy-table td.highlight {
+    font-weight: 600;
+    color: var(--grass-dark);
+  }
+
+  .progress-item {
+    margin-bottom: 10px;
+  }
+  .progress-item:last-child { margin-bottom: 0; }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .progress-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .progress-days {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+  .progress-bar-wrap {
+    height: 8px;
+    background: #F0F0F0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+
+  .revenue-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .revenue-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .revenue-card .rev-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+  .revenue-card .rev-value {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+  }
+  .revenue-card .rev-unit {
+    font-size: 9px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+  .revenue-card.highlight-card {
+    background: linear-gradient(135deg, #E8F5D0, #D4EBB0);
+    border-color: #A5D66A;
+  }
+  .revenue-card.highlight-card .rev-value { color: var(--grass-dark); }
+
+  .scenario-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .scenario-table th {
+    background: var(--bg);
+    padding: 5px 8px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 10px;
+  }
+  .scenario-table td {
+    padding: 5px 8px;
+    text-align: center;
+    border-bottom: 1px solid #F5F5F5;
+    color: var(--text-primary);
+  }
+  .scenario-table tr:last-child td { border-bottom: none; }
+  .scenario-table .dau-col { font-weight: 700; color: var(--grass-dark); }
+  .scenario-table .active-row { background: #FFF8E1; }
+
+  .ber-banner {
+    background: linear-gradient(135deg, #FFF8E1, #FFF3E0);
+    border: 1.5px solid var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+  .ber-label { color: var(--text-secondary); font-weight: 500; }
+  .ber-value { font-size: 18px; font-weight: 800; color: #F57F17; }
+
+  .toss-point-banner {
+    background: var(--petal-light);
+    border: 1.5px solid var(--petal);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #C2185B;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  /* ── DAU SLIDER ── */
+  .dau-control {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .dau-value-display {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--grass-dark);
+    letter-spacing: -1px;
+  }
+  .dau-value-display span { font-size: 14px; font-weight: 400; color: var(--text-secondary); }
+  .dau-slider {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(to right, var(--grass) 0%, var(--bg) 0%);
+    outline: none;
+    cursor: pointer;
+  }
+  .dau-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--grass-dark);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    cursor: pointer;
+  }
+  .dau-presets {
+    display: flex;
+    gap: 6px;
+  }
+  .preset-btn {
+    flex: 1;
+    padding: 6px 0;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: var(--card);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .preset-btn.active {
+    background: var(--grass);
+    border-color: var(--grass-dark);
+    color: white;
+  }
+
+  /* TAB BAR removed — replaced by mode switcher */
+
+  /* ── SIDE PANEL (옵션 설정) ── */
+  .side-panel {
+    width: 340px;
+    min-height: 740px;
+    max-height: 740px;
+    background: var(--card);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .side-panel-header {
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .side-panel-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .side-panel-sub {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  .side-panel-content {
+    overflow-y: auto;
+    flex: 1;
+    padding: 8px 14px 20px;
+    scrollbar-width: thin;
+    scrollbar-color: #D4E8B8 transparent;
+  }
+  .side-panel-content::-webkit-scrollbar { width: 4px; }
+  .side-panel-content::-webkit-scrollbar-thumb { background: #D4E8B8; border-radius: 4px; }
+
+  /* Hide old bottom sheet elements */
+  .sheet-overlay, .sheet-handle-area, .sheet-handle, .sheet-header-title { display: none; }
+
+  /* ── ACCORDION ── */
+  .accordion-item {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .accordion-item.open { border-color: var(--grass); }
+
+  .accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    cursor: pointer;
+    background: var(--bg);
+    transition: background 0.2s;
+  }
+  .accordion-item.open .accordion-header { background: #EDF7E0; }
+  .accordion-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .accordion-arrow {
+    font-size: 12px;
+    color: var(--text-muted);
+    transition: transform 0.25s;
+  }
+  .accordion-item.open .accordion-arrow { transform: rotate(180deg); }
+
+  .accordion-body {
+    display: none;
+    padding: 12px 14px;
+    border-top: 1px solid var(--border);
+    background: var(--card);
+  }
+  .accordion-item.open .accordion-body { display: block; }
+
+  .option-group {
+    margin-bottom: 12px;
+  }
+  .option-group:last-child { margin-bottom: 0; }
+  .option-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .pill-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .pill-btn {
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .pill-btn.selected {
+    background: var(--grass);
+    border-color: var(--grass-dark);
+    color: white;
+    font-weight: 600;
+  }
+  .pill-btn:active { transform: scale(0.96); }
+
+  /* ── GRAVE DETAIL SHEET ── */
+  .grave-sheet {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: var(--card);
+    border-radius: 24px 24px 0 0;
+    z-index: 300;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.2);
+    padding: 0 0 32px;
+  }
+  .grave-sheet.open { transform: translateY(0); }
+
+  .grave-sheet-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0);
+    z-index: 250;
+    pointer-events: none;
+    transition: background 0.3s;
+  }
+  .grave-sheet-overlay.visible {
+    background: rgba(0,0,0,0.4);
+    pointer-events: auto;
+  }
+
+  .grave-detail-header {
+    padding: 14px 20px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .grave-detail-emoji { font-size: 48px; margin: 8px 0; }
+  .grave-detail-name {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+  .grave-detail-category {
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: var(--bg);
+    border-radius: var(--radius-pill);
+    padding: 3px 10px;
+    margin-bottom: 14px;
+  }
+  .grave-detail-epitaph {
+    font-size: 15px;
+    color: var(--text-primary);
+    font-style: italic;
+    text-align: center;
+    line-height: 1.6;
+    padding: 14px 20px;
+    background: var(--bg);
+    border-radius: var(--radius);
+    margin: 0 20px 14px;
+    border: 1px solid var(--border);
+  }
+  .grave-detail-epitaph::before { content: '"'; }
+  .grave-detail-epitaph::after { content: '"'; }
+  .grave-detail-period {
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .grave-detail-period .period-range {
+    font-weight: 700;
+    color: var(--grass-dark);
+  }
+  .grave-close-btn {
+    display: block;
+    margin: 0 20px;
+    padding: 14px;
+    background: var(--grass);
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    width: calc(100% - 40px);
+    transition: background 0.2s;
+  }
+  .grave-close-btn:active { background: var(--grass-dark); }
+
+  /* ── Animations ── */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fadeIn 0.3s ease forwards; }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  .wilted-badge { animation: pulse 2s infinite; }
+
+  /* ── Economy inline slider ── */
+  .dau-slider-section {
+    display: none;
+  }
+  .accordion-item.open .dau-slider-section { display: block; }
+
+  /* Responsive on larger screens */
+  @media (max-width: 400px) {
+    body { padding: 0; }
+    #app { width: 100vw; border-radius: 0; min-height: 100vh; max-height: none; }
+  }
+
+  /* ── MODE SWITCHER ── */
+  .mode-switcher {
+    display: flex;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    gap: 8px;
+  }
+  .mode-btn {
+    flex: 1;
+    padding: 8px 0;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .mode-btn.active-customer {
+    background: #E8F5E9;
+    border-color: var(--grass);
+    color: var(--grass-dark);
+  }
+  .mode-btn.active-internal {
+    background: #FFF3E0;
+    border-color: var(--accent);
+    color: #E65100;
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- HEADER -->
+  <div class="app-header">
+    <div class="app-title">에피<span>타프</span> <span style="font-size:12px;color:#aaa;font-weight:400;">Prototype</span></div>
+    <div class="petal-badge" id="petalBadge">🌸 <span id="petalBalance">84</span>꽃잎</div>
+  </div>
+
+  <!-- MODE SWITCHER -->
+  <div class="mode-switcher">
+    <button class="mode-btn active-customer" id="mode-customer" onclick="switchMode('customer')">🌿 고객용</button>
+    <button class="mode-btn" id="mode-internal" onclick="switchMode('internal')">💰 내부용</button>
+  </div>
+
+  <!-- CONFIRMED CHIPS -->
+  <div class="confirmed-chips">
+    <div class="chip locked">BM: D방향</div>
+    <div class="chip locked">기억/기록</div>
+    <div class="chip locked">12h 시간게이트</div>
+    <div class="chip locked">전면+리워드광고</div>
+    <div class="chip locked">eCPM 전면3,000</div>
+    <div class="chip locked">eCPM 리워드3,200</div>
+  </div>
+
+  <!-- CONTENT AREA -->
+  <div class="content-area">
+    <!-- TAB A: CEMETERY -->
+    <div class="tab-panel active" id="panel-cemetery">
+      <div class="cemetery-bg">
+        <div class="graves-grid" id="gravesGrid"></div>
+      </div>
+    </div>
+
+    <!-- TAB B: ECONOMY -->
+    <div class="tab-panel" id="panel-economy">
+      <div class="economy-content">
+
+        <!-- Petal Economy Table -->
+        <div class="card">
+          <div class="card-title">🌸 꽃잎 경제 시뮬레이션</div>
+          <table class="economy-table" id="economyTable">
+            <thead>
+              <tr>
+                <th>기간</th>
+                <th>광고 꽃잎</th>
+                <th>출석 꽃잎</th>
+                <th>보너스</th>
+                <th class="total">합계</th>
+              </tr>
+            </thead>
+            <tbody id="economyTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- What can I buy -->
+        <div class="card">
+          <div class="card-title">🛍️ 뭘 살 수 있나?</div>
+          <div id="purchaseProgress"></div>
+        </div>
+
+        <!-- Toss Point -->
+        <div class="toss-point-banner" id="tossPointBanner"></div>
+
+        <!-- Revenue Dashboard -->
+        <div class="card">
+          <div class="card-title">💰 수익 대시보드</div>
+
+          <!-- DAU Control (inline) -->
+          <div class="dau-control" style="margin-bottom:16px;">
+            <div class="dau-value-display">
+              <span id="dauDisplay2">300</span> <span>DAU</span>
+            </div>
+            <input type="range" class="dau-slider" id="dauSlider2" min="50" max="2000" step="50" value="300">
+            <div class="dau-presets" id="dauPresets2">
+              <button class="preset-btn" data-val="100" onclick="setDau(100)">100</button>
+              <button class="preset-btn active" data-val="300" onclick="setDau(300)">300</button>
+              <button class="preset-btn" data-val="500" onclick="setDau(500)">500</button>
+              <button class="preset-btn" data-val="1000" onclick="setDau(1000)">1,000</button>
+            </div>
+          </div>
+
+          <div class="revenue-cards">
+            <div class="revenue-card">
+              <div class="rev-label">일 수익</div>
+              <div class="rev-value" id="revDaily">-</div>
+              <div class="rev-unit">원</div>
+            </div>
+            <div class="revenue-card">
+              <div class="rev-label">월 수익</div>
+              <div class="rev-value" id="revMonthly">-</div>
+              <div class="rev-unit">원</div>
+            </div>
+            <div class="revenue-card highlight-card">
+              <div class="rev-label">구독 커버율</div>
+              <div class="rev-value" id="revCoverage">-</div>
+              <div class="rev-unit">Claude 기준</div>
+            </div>
+          </div>
+
+          <!-- Scenario Table -->
+          <div class="section-title">DAU별 시나리오</div>
+          <table class="scenario-table" id="scenarioTable">
+            <thead>
+              <tr>
+                <th>DAU</th>
+                <th>일 수익</th>
+                <th>월 수익</th>
+                <th>구독커버</th>
+              </tr>
+            </thead>
+            <tbody id="scenarioBody"></tbody>
+          </table>
+
+          <!-- BER -->
+          <div class="ber-banner" style="margin-top:12px;">
+            <span class="ber-label">⚖️ 손익분기 DAU</span>
+            <span class="ber-value">645명</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB BAR REMOVED: replaced by mode switcher -->
+
+  <!-- GRAVE DETAIL OVERLAY -->
+  <div class="grave-sheet-overlay" id="graveOverlay" onclick="closeGraveSheet()"></div>
+
+  <!-- GRAVE DETAIL SHEET -->
+  <div class="grave-sheet" id="graveSheet">
+    <div class="sheet-handle-area">
+      <div class="sheet-handle"></div>
+    </div>
+    <div class="grave-detail-header">
+      <div class="grave-detail-emoji" id="graveDetailEmoji">📱</div>
+      <div class="grave-detail-name" id="graveDetailName">첫 번째 스마트폰</div>
+      <div class="grave-detail-category" id="graveDetailCategory">전자기기</div>
+    </div>
+    <div class="grave-detail-epitaph" id="graveDetailEpitaph">고등학교 3년을 함께한 친구</div>
+    <div class="grave-detail-period">
+      <span>함께한 기간</span>
+      <span class="period-range" id="graveDetailPeriod">2018 ~ 2023</span>
+    </div>
+    <button class="grave-close-btn" onclick="closeGraveSheet()">돌아가기</button>
+  </div>
+
+</div>
+
+<!-- SIDE PANEL: 미결 옵션 설정 -->
+<div class="side-panel" id="sidePanel">
+  <div class="side-panel-header">
+    <div class="side-panel-title">⚙️ 미결 옵션 설정</div>
+    <div class="side-panel-sub">옵션 변경 시 왼쪽 화면에 실시간 반영됩니다</div>
+  </div>
+  <div class="side-panel-content">
+
+    <!-- ACCORDION 1: 꽃잎 재화 -->
+    <div class="accordion-item open" id="acc1">
+      <div class="accordion-header" onclick="toggleAcc('acc1')">
+        <div class="accordion-title">🌸 꽃잎 재화</div>
+        <div class="accordion-arrow">▼</div>
+      </div>
+      <div class="accordion-body">
+        <div class="option-group">
+          <div class="option-label">리워드 광고 1회당 꽃잎</div>
+          <div class="pill-group">
+            <button class="pill-btn" data-key="rewardAdPetal" data-val="3" onclick="setPill(this,'rewardAdPetal',3)">3꽃잎</button>
+            <button class="pill-btn selected" data-key="rewardAdPetal" data-val="5" onclick="setPill(this,'rewardAdPetal',5)">5꽃잎 <span class="v2-badge">v2</span></button>
+            <button class="pill-btn" data-key="rewardAdPetal" data-val="10" onclick="setPill(this,'rewardAdPetal',10)">10꽃잎</button>
+          </div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">일일 광고 시청 상한</div>
+          <div class="pill-group">
+            <button class="pill-btn selected" data-key="dailyAdCap" data-val="3" onclick="setPill(this,'dailyAdCap',3)">3회 <span class="v2-badge">v2</span></button>
+            <button class="pill-btn" data-key="dailyAdCap" data-val="5" onclick="setPill(this,'dailyAdCap',5)">5회</button>
+            <button class="pill-btn" data-key="dailyAdCap" data-val="99" onclick="setPill(this,'dailyAdCap',99)">무제한</button>
+          </div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">출석 보상</div>
+          <div class="pill-group">
+            <button class="pill-btn" data-key="attendanceReward" data-val="1" onclick="setPill(this,'attendanceReward',1)">1꽃잎</button>
+            <button class="pill-btn selected" data-key="attendanceReward" data-val="3" onclick="setPill(this,'attendanceReward',3)">3꽃잎 <span class="v2-badge">v2</span></button>
+            <button class="pill-btn" data-key="attendanceReward" data-val="5" onclick="setPill(this,'attendanceReward',5)">5꽃잎</button>
+          </div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">토스포인트 전환 비율</div>
+          <div class="pill-group">
+            <button class="pill-btn" data-key="conversionRatio" data-val="10=1" onclick="setPill(this,'conversionRatio','10=1')">10꽃잎=1P</button>
+            <button class="pill-btn" data-key="conversionRatio" data-val="50=10" onclick="setPill(this,'conversionRatio','50=10')">50꽃잎=10P</button>
+            <button class="pill-btn selected" data-key="conversionRatio" data-val="100=10" onclick="setPill(this,'conversionRatio','100=10')">100꽃잎=10P <span class="v2-badge">v2</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCORDION 2: 묘비 상한 -->
+    <div class="accordion-item" id="acc2">
+      <div class="accordion-header" onclick="toggleAcc('acc2')">
+        <div class="accordion-title">🪦 묘비 상한</div>
+        <div class="accordion-arrow">▼</div>
+      </div>
+      <div class="accordion-body">
+        <div class="option-group">
+          <div class="option-label">무료 제공 수</div>
+          <div class="pill-group">
+            <button class="pill-btn" data-key="freeGraves" data-val="5" onclick="setPill(this,'freeGraves',5)">5기</button>
+            <button class="pill-btn selected" data-key="freeGraves" data-val="10" onclick="setPill(this,'freeGraves',10)">10기 <span class="v2-badge">v2</span></button>
+            <button class="pill-btn" data-key="freeGraves" data-val="15" onclick="setPill(this,'freeGraves',15)">15기</button>
+          </div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">최대 상한</div>
+          <div class="pill-group">
+            <button class="pill-btn" data-key="maxCap" data-val="30" onclick="setPill(this,'maxCap',30)">30기</button>
+            <button class="pill-btn selected" data-key="maxCap" data-val="50" onclick="setPill(this,'maxCap',50)">50기 <span class="v2-badge">v2</span></button>
+            <button class="pill-btn" data-key="maxCap" data-val="100" onclick="setPill(this,'maxCap',100)">100기</button>
+            <button class="pill-btn" data-key="maxCap" data-val="9999" onclick="setPill(this,'maxCap',9999)">무제한</button>
+          </div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">추가 구매 단위 (30꽃잎당)</div>
+          <div class="pill-group">
+            <button class="pill-btn" data-key="purchaseUnit" data-val="3" onclick="setPill(this,'purchaseUnit',3)">+3기</button>
+            <button class="pill-btn selected" data-key="purchaseUnit" data-val="5" onclick="setPill(this,'purchaseUnit',5)">+5기 <span class="v2-badge">v2</span></button>
+            <button class="pill-btn" data-key="purchaseUnit" data-val="10" onclick="setPill(this,'purchaseUnit',10)">+10기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCORDION 3: 콘텐츠 감수 -->
+    <div class="accordion-item" id="acc3">
+      <div class="accordion-header" onclick="toggleAcc('acc3')">
+        <div class="accordion-title">🔍 콘텐츠 감수</div>
+        <div class="accordion-arrow">▼</div>
+      </div>
+      <div class="accordion-body">
+        <div class="option-group">
+          <div class="option-label">검수 방식</div>
+          <div class="pill-group">
+            <button class="pill-btn selected" data-key="reviewMethod" data-val="ai" onclick="setPill(this,'reviewMethod','ai')">AI 자동</button>
+            <button class="pill-btn" data-key="reviewMethod" data-val="report" onclick="setPill(this,'reviewMethod','report')">신고 기반</button>
+            <button class="pill-btn" data-key="reviewMethod" data-val="slack" onclick="setPill(this,'reviewMethod','slack')">슬랙검수봇</button>
+          </div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">업로드 제한</div>
+          <div class="pill-group">
+            <button class="pill-btn selected" data-key="uploadRestriction" data-val="photo" onclick="setPill(this,'uploadRestriction','photo')">사진 허용</button>
+            <button class="pill-btn" data-key="uploadRestriction" data-val="icon" onclick="setPill(this,'uploadRestriction','icon')">아이콘만</button>
+            <button class="pill-btn" data-key="uploadRestriction" data-val="aifilter" onclick="setPill(this,'uploadRestriction','aifilter')">AI 필터링</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCORDION 4: Phase 1 스코프 -->
+    <div class="accordion-item" id="acc4">
+      <div class="accordion-header" onclick="toggleAcc('acc4')">
+        <div class="accordion-title">📋 Phase 1 스코프</div>
+        <div class="accordion-arrow">▼</div>
+      </div>
+      <div class="accordion-body">
+        <div class="option-group">
+          <div class="option-label">토스포인트 전환 포함 여부</div>
+          <div class="pill-group">
+            <button class="pill-btn" data-key="tossPointPhase1" data-val="true" onclick="setPill(this,'tossPointPhase1',true)">Phase 1 포함</button>
+            <button class="pill-btn selected" data-key="tossPointPhase1" data-val="false" onclick="setPill(this,'tossPointPhase1',false)">Phase 2로 이동</button>
+          </div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">묘비 장식 기능 포함 여부</div>
+          <div class="pill-group">
+            <button class="pill-btn selected" data-key="decorationPhase1" data-val="true" onclick="setPill(this,'decorationPhase1',true)">Phase 1 포함 <span class="v2-badge">v2</span></button>
+            <button class="pill-btn" data-key="decorationPhase1" data-val="false" onclick="setPill(this,'decorationPhase1',false)">Phase 2로 이동</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCORDION 5: 수익 시뮬레이터 -->
+    <div class="accordion-item" id="acc5">
+      <div class="accordion-header" onclick="toggleAcc('acc5')">
+        <div class="accordion-title">💰 수익 시뮬레이터 (DAU)</div>
+        <div class="accordion-arrow">▼</div>
+      </div>
+      <div class="accordion-body">
+        <div class="dau-control">
+          <div class="dau-value-display">
+            <span id="dauDisplay">300</span> <span>DAU</span>
+          </div>
+          <input type="range" class="dau-slider" id="dauSlider" min="50" max="2000" step="50" value="300">
+          <div class="dau-presets">
+            <button class="preset-btn" onclick="setDau(100)">100</button>
+            <button class="preset-btn active" onclick="setDau(300)">300</button>
+            <button class="preset-btn" onclick="setDau(500)">500</button>
+            <button class="preset-btn" onclick="setDau(1000)">1,000</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const state = {
+  rewardAdPetal: 5,
+  dailyAdCap: 3,
+  attendanceReward: 3,
+  conversionRatio: '100=10',
+  freeGraves: 10,
+  maxCap: 50,
+  purchaseUnit: 5,
+  reviewMethod: 'ai',
+  uploadRestriction: 'photo',
+  tossPointPhase1: false,
+  decorationPhase1: true,
+  dau: 300,
+  activeTab: 'cemetery'
+};
+
+const GRAVES_DATA = [
+  { name: '첫 번째 스마트폰', emoji: '📱', epitaph: '고등학교 3년을 함께한 친구', category: '전자기기', period: '2018~2023', wilted: false },
+  { name: '낡은 운동화', emoji: '👟', epitaph: '첫 마라톤 완주의 증거', category: '옷/신발', period: '2020~2024', wilted: true },
+  { name: '곰 인형', emoji: '🧸', epitaph: '어릴 적 나의 수호자', category: '인형/장난감', period: '1998~2015', wilted: false },
+  { name: '기타', emoji: '🎸', epitaph: '대학 밴드의 추억', category: '취미용품', period: '2019~2023', wilted: false },
+  { name: '일기장', emoji: '📔', epitaph: '10대의 나를 담은 시간', category: '문구/책', period: '2015~2020', wilted: false },
+  { name: '머그컵', emoji: '☕', epitaph: '매일 아침을 함께한 루틴', category: '생활용품', period: '2021~2025', wilted: false },
+  { name: '카세트 테이프', emoji: '📼', epitaph: '아빠가 녹음해준 목소리', category: '추억의 물건', period: '1995~2010', wilted: false },
+];
+
+// Economy calculation
+function calcEconomy() {
+  const adPetal = state.rewardAdPetal;
+  const cap = state.dailyAdCap === 99 ? 5 : state.dailyAdCap; // 무제한 → 실사용율 5회로 가정
+
+  const dailyAd = adPetal * cap;
+  const dailyAttend = state.attendanceReward;
+  const dailyTotal = dailyAd + dailyAttend;
+
+  const weeklyAd = dailyAd * 7;
+  const weeklyAttend = dailyAttend * 7;
+  const weeklyBonus = 5 + 15; // 3일연속+7일연속
+  const weeklyTotal = weeklyAd + weeklyAttend + weeklyBonus;
+
+  const monthlyTotal = Math.round(weeklyTotal * 4.3);
+
+  return { dailyAd, dailyAttend, dailyTotal, weeklyAd, weeklyAttend, weeklyBonus, weeklyTotal, monthlyTotal };
+}
+
+function calcRevenue(dau) {
+  const rewardCap = state.dailyAdCap === 99 ? 5 : state.dailyAdCap;
+  // 전면광고: 1.5회/day × 3원, 리워드: cap회 × 3.2원
+  const perDau = 1.5 * 3 + rewardCap * 3.2;
+  const daily = Math.round(dau * perDau);
+  const monthly = daily * 30;
+  const coverage = Math.round((monthly / 180000) * 100);
+  return { daily, monthly, coverage };
+}
+
+function formatNum(n) {
+  if (n >= 10000) return (n / 10000).toFixed(1) + '만';
+  return n.toLocaleString();
+}
+
+function getTossPointStr() {
+  const eco = calcEconomy();
+  const monthly = eco.monthlyTotal;
+  const ratio = state.conversionRatio;
+  let pts = 0;
+  if (ratio === '10=1') pts = Math.floor(monthly / 10) * 1;
+  else if (ratio === '50=10') pts = Math.floor(monthly / 50) * 10;
+  else if (ratio === '100=10') pts = Math.floor(monthly / 100) * 10;
+
+  if (!state.tossPointPhase1) {
+    return '토스포인트 전환 → Phase 2 예정 (미구현)';
+  }
+  return `월 ${monthly}꽃잎 = 약 ${pts} 토스포인트`;
+}
+
+// Render graves grid
+function renderGraves() {
+  const grid = document.getElementById('gravesGrid');
+  const free = state.freeGraves;
+  const max = state.maxCap === 9999 ? 30 : state.maxCap; // 무제한은 30개로 표시
+  const extra = max - free;
+  const isIconOnly = state.uploadRestriction === 'icon';
+  const decoOff = !state.decorationPhase1;
+
+  // Display: graves data (up to free), then extra slots, then add prompt
+  const maxDisplay = 20;
+  let html = '';
+
+  // Filled graves (sample data)
+  const dataCount = Math.min(GRAVES_DATA.length, free);
+  GRAVES_DATA.slice(0, dataCount).forEach((g, i) => {
+    const isWilted = g.wilted;
+    const decoEmoji = decoOff ? '' : (i % 3 === 0 ? '🌸' : i % 3 === 1 ? '🌿' : '');
+    html += `<div class="grave-slot free fade-in" style="animation-delay:${i*0.05}s" onclick="openGraveDetail(${i})">
+      ${isWilted ? '<div class="wilted-badge">헌화 필요 🥀</div>' : ''}
+      ${decoOff && decoEmoji ? '<div class="phase2-badge">Phase 2</div>' : ''}
+      <div class="grave-emoji${decoOff && decoEmoji ? ' greyed':''}">${g.emoji}</div>
+      <div class="grave-name">${g.name}</div>
+      <div class="grave-year">${g.period}</div>
+      ${decoEmoji ? `<div class="grave-decoration${decoOff ? ' phase2-off':''}">🌸</div>` : ''}
+    </div>`;
+  });
+
+  // Empty free slots
+  for (let i = dataCount; i < free && i < maxDisplay; i++) {
+    html += `<div class="grave-slot free" style="animation-delay:${i*0.05}s">
+      <div style="font-size:20px;color:#C5E1A5">+</div>
+      <div class="add-slot-label">묘비 추가</div>
+    </div>`;
+  }
+
+  // Extra (purchase) slots
+  const extraDisplay = Math.min(extra, maxDisplay - Math.min(free, maxDisplay));
+  for (let i = 0; i < extraDisplay; i++) {
+    const slotIdx = free + i;
+    if (slotIdx >= maxDisplay) break;
+    html += `<div class="grave-slot extra" style="animation-delay:${slotIdx*0.04}s">
+      <div style="font-size:14px;color:#A5C880">🪦</div>
+      <div class="add-slot-label" style="color:#A5C880;font-size:9px">+30꽃잎</div>
+    </div>`;
+  }
+
+  // Overflow indicator
+  const totalShown = Math.min(free, maxDisplay) + extraDisplay;
+  const totalSlots = free + extra;
+  if (totalSlots > maxDisplay) {
+    const remaining = totalSlots - totalShown;
+    html += `<div class="grave-slot overflow-slot">+${remaining}</div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+// Render economy table
+function renderEconomy() {
+  const eco = calcEconomy();
+  const tbody = document.getElementById('economyTableBody');
+  tbody.innerHTML = `
+    <tr>
+      <td>일간</td>
+      <td>${eco.dailyAd}</td>
+      <td>${eco.dailyAttend}</td>
+      <td>-</td>
+      <td class="total">${eco.dailyTotal}</td>
+    </tr>
+    <tr>
+      <td>주간</td>
+      <td>${eco.weeklyAd}</td>
+      <td>${eco.weeklyAttend}</td>
+      <td class="highlight">+${eco.weeklyBonus}</td>
+      <td class="total">${eco.weeklyTotal}</td>
+    </tr>
+    <tr>
+      <td>월간</td>
+      <td colspan="2">주간×4.3</td>
+      <td>포함</td>
+      <td class="total">${eco.monthlyTotal}</td>
+    </tr>
+  `;
+
+  // Purchase progress
+  const weekly = eco.weeklyTotal;
+  const items = [
+    { name: '🎨 스킨', cost: 15, color: '#FFB4C8' },
+    { name: '🌸 장식', cost: 7, color: '#A5D66A' },
+    { name: '➕ 추가슬롯', cost: 30, color: '#FFD54F' },
+    { name: '🖼️ 배경', cost: 30, color: '#90CAF9' },
+  ];
+  const progressHtml = items.map(item => {
+    const daysNeeded = Math.ceil(item.cost / eco.dailyTotal);
+    const pct = Math.min(100, Math.round((weekly / (item.cost * 4)) * 100));
+    return `<div class="progress-item">
+      <div class="progress-header">
+        <span class="progress-label">${item.name} (${item.cost}꽃잎)</span>
+        <span class="progress-days">${daysNeeded}일 소요</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" style="width:${pct}%;background:${item.color}"></div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('purchaseProgress').innerHTML = progressHtml;
+
+  // Toss point
+  document.getElementById('tossPointBanner').textContent = '💳 ' + getTossPointStr();
+
+  // Revenue
+  renderRevenue();
+}
+
+function renderRevenue() {
+  const { daily, monthly, coverage } = calcRevenue(state.dau);
+  document.getElementById('revDaily').textContent = formatNum(daily);
+  document.getElementById('revMonthly').textContent = formatNum(monthly);
+  document.getElementById('revCoverage').textContent = coverage + '%';
+
+  // Scenario table
+  const scenarios = [100, 300, 500, 1000];
+  const rows = scenarios.map(d => {
+    const r = calcRevenue(d);
+    const isActive = d === state.dau;
+    return `<tr class="${isActive ? 'active-row' : ''}">
+      <td class="dau-col">${d.toLocaleString()}</td>
+      <td>${r.daily.toLocaleString()}원</td>
+      <td>${formatNum(r.monthly)}원</td>
+      <td>${r.coverage}%</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('scenarioBody').innerHTML = rows;
+
+  // DAU display
+  document.getElementById('dauDisplay').textContent = state.dau.toLocaleString();
+  document.getElementById('dauDisplay2').textContent = state.dau.toLocaleString();
+
+  // Slider sync
+  document.getElementById('dauSlider').value = state.dau;
+  document.getElementById('dauSlider2').value = state.dau;
+  updateSliderGradient(document.getElementById('dauSlider'));
+  updateSliderGradient(document.getElementById('dauSlider2'));
+
+  // Preset buttons
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    const presetVal = parseInt(btn.getAttribute('onclick').match(/\d+/)?.[0] || '0');
+    btn.classList.toggle('active', presetVal === state.dau);
+  });
+}
+
+function updateSliderGradient(slider) {
+  const min = parseInt(slider.min);
+  const max = parseInt(slider.max);
+  const val = parseInt(slider.value);
+  const pct = ((val - min) / (max - min)) * 100;
+  slider.style.background = `linear-gradient(to right, var(--grass) ${pct}%, #E0E0E0 ${pct}%)`;
+}
+
+// Petal balance (weekly total)
+function renderPetalBadge() {
+  const eco = calcEconomy();
+  document.getElementById('petalBalance').textContent = eco.weeklyTotal;
+}
+
+function render() {
+  renderGraves();
+  renderEconomy();
+  renderPetalBadge();
+}
+
+// Mode switch (고객용/내부용)
+function switchMode(mode) {
+  state.activeTab = mode === 'customer' ? 'cemetery' : 'economy';
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + (mode === 'customer' ? 'cemetery' : 'economy')).classList.add('active');
+
+  // Update mode buttons
+  document.getElementById('mode-customer').className = 'mode-btn' + (mode === 'customer' ? ' active-customer' : '');
+  document.getElementById('mode-internal').className = 'mode-btn' + (mode === 'internal' ? ' active-internal' : '');
+}
+
+// Sheet toggle (legacy, no longer needed for side panel)
+function toggleSheet() {}
+function closeSheet() {}
+
+// Accordion
+function toggleAcc(id) {
+  const el = document.getElementById(id);
+  const wasOpen = el.classList.contains('open');
+  // close all
+  document.querySelectorAll('.accordion-item').forEach(a => a.classList.remove('open'));
+  if (!wasOpen) el.classList.add('open');
+}
+
+// Pill selection
+function setPill(btn, key, val) {
+  // Toggle visuals
+  const group = btn.closest('.pill-group');
+  group.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+
+  // Update state
+  if (val === true || val === false) {
+    state[key] = val;
+  } else if (val === 'true') {
+    state[key] = true;
+  } else if (val === 'false') {
+    state[key] = false;
+  } else {
+    state[key] = typeof state[key] === 'number' ? Number(val) : val;
+  }
+
+  render();
+}
+
+// DAU control
+function setDau(val) {
+  state.dau = val;
+  const slider = document.getElementById('dauSlider');
+  if (slider) { slider.value = val; updateSliderGradient(slider); }
+  renderRevenue();
+}
+
+// DAU slider events
+const dauEl = document.getElementById('dauSlider');
+if (dauEl) {
+  dauEl.addEventListener('input', function() {
+    state.dau = parseInt(this.value);
+    updateSliderGradient(this);
+    renderRevenue();
+  });
+}
+
+// Grave detail sheet
+function openGraveDetail(idx) {
+  const g = GRAVES_DATA[idx];
+  if (!g) return;
+  document.getElementById('graveDetailEmoji').textContent = g.emoji;
+  document.getElementById('graveDetailName').textContent = g.name;
+  document.getElementById('graveDetailCategory').textContent = g.category;
+  document.getElementById('graveDetailEpitaph').textContent = g.epitaph;
+  document.getElementById('graveDetailPeriod').textContent = g.period;
+
+  document.getElementById('graveSheet').classList.add('open');
+  document.getElementById('graveOverlay').classList.add('visible');
+}
+function closeGraveSheet() {
+  document.getElementById('graveSheet').classList.remove('open');
+  document.getElementById('graveOverlay').classList.remove('visible');
+}
+
+// Init
+render();
+const initSlider = document.getElementById('dauSlider');
+if (initSlider) updateSliderGradient(initSlider);
+</script>
+
+</body>
+</html>
