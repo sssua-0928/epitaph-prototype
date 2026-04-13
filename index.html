@@ -743,43 +743,65 @@
     #app { width: 100vw; border-radius: 0; min-height: 100vh; max-height: none; }
   }
 
-  /* ── MODE SWITCHER ── */
-  .mode-switcher {
+  /* ── LEFT SIDE TABS ── */
+  .left-tabs {
+    width: 56px;
+    min-height: 740px;
+    max-height: 740px;
     display: flex;
-    background: var(--card);
-    border-bottom: 1px solid var(--border);
-    padding: 8px 16px;
+    flex-direction: column;
     gap: 8px;
+    padding-top: 20px;
   }
-  .mode-btn {
-    flex: 1;
-    padding: 8px 0;
+  .left-tab-btn {
+    width: 56px;
+    height: 80px;
     border: 2px solid var(--border);
-    border-radius: var(--radius-pill);
-    background: transparent;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
+    border-radius: 16px;
+    background: var(--card);
     cursor: pointer;
-    transition: all 0.25s;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 4px;
+    transition: all 0.25s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   }
-  .mode-btn.active-customer {
+  .left-tab-btn .tab-icon { font-size: 20px; }
+  .left-tab-btn .tab-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    writing-mode: horizontal-tb;
+  }
+  .left-tab-btn.active-customer {
     background: #E8F5E9;
     border-color: var(--grass);
-    color: var(--grass-dark);
+    box-shadow: 0 4px 12px rgba(139,195,74,0.3);
   }
-  .mode-btn.active-internal {
+  .left-tab-btn.active-customer .tab-label { color: var(--grass-dark); }
+  .left-tab-btn.active-internal {
     background: #FFF3E0;
     border-color: var(--accent);
-    color: #E65100;
+    box-shadow: 0 4px 12px rgba(255,213,79,0.3);
   }
+  .left-tab-btn.active-internal .tab-label { color: #E65100; }
 </style>
 </head>
 <body>
+
+<!-- LEFT SIDE TABS -->
+<div class="left-tabs">
+  <button class="left-tab-btn active-customer" id="mode-customer" onclick="switchMode('customer')">
+    <span class="tab-icon">🌿</span>
+    <span class="tab-label">고객용</span>
+  </button>
+  <button class="left-tab-btn" id="mode-internal" onclick="switchMode('internal')">
+    <span class="tab-icon">💰</span>
+    <span class="tab-label">내부용</span>
+  </button>
+</div>
 
 <div id="app">
   <!-- HEADER -->
@@ -788,21 +810,7 @@
     <div class="petal-badge" id="petalBadge">🌸 <span id="petalBalance">84</span>꽃잎</div>
   </div>
 
-  <!-- MODE SWITCHER -->
-  <div class="mode-switcher">
-    <button class="mode-btn active-customer" id="mode-customer" onclick="switchMode('customer')">🌿 고객용</button>
-    <button class="mode-btn" id="mode-internal" onclick="switchMode('internal')">💰 내부용</button>
-  </div>
-
-  <!-- CONFIRMED CHIPS -->
-  <div class="confirmed-chips">
-    <div class="chip locked">BM: D방향</div>
-    <div class="chip locked">기억/기록</div>
-    <div class="chip locked">12h 시간게이트</div>
-    <div class="chip locked">전면+리워드광고</div>
-    <div class="chip locked">eCPM 전면3,000</div>
-    <div class="chip locked">eCPM 리워드3,200</div>
-  </div>
+  <!-- MODE SWITCHER & CONFIRMED CHIPS removed — mode tabs moved to left side panel -->
 
   <!-- CONTENT AREA -->
   <div class="content-area">
@@ -1344,8 +1352,8 @@ function switchMode(mode) {
   document.getElementById('panel-' + (mode === 'customer' ? 'cemetery' : 'economy')).classList.add('active');
 
   // Update mode buttons
-  document.getElementById('mode-customer').className = 'mode-btn' + (mode === 'customer' ? ' active-customer' : '');
-  document.getElementById('mode-internal').className = 'mode-btn' + (mode === 'internal' ? ' active-internal' : '');
+  document.getElementById('mode-customer').className = 'left-tab-btn' + (mode === 'customer' ? ' active-customer' : '');
+  document.getElementById('mode-internal').className = 'left-tab-btn' + (mode === 'internal' ? ' active-internal' : '');
 }
 
 // Sheet toggle (legacy, no longer needed for side panel)
