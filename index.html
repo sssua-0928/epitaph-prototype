@@ -239,7 +239,7 @@
   }
 
   .grave-slot {
-    aspect-ratio: 3/4;
+    aspect-ratio: 3/5;
     border-radius: var(--radius-sm);
     display: flex;
     flex-direction: column;
@@ -309,6 +309,31 @@
     font-size: 8px;
     color: white;
     font-weight: 600;
+  }
+
+  /* ── OFFERING BUTTON ON GRAVE ── */
+  .offering-btn {
+    width: 100%;
+    padding: 4px 0;
+    border: none;
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 2px;
+  }
+  .offering-btn.available {
+    background: var(--petal);
+    color: white;
+  }
+  .offering-btn.available:active { transform: scale(0.95); background: #FF7EB3; }
+  .offering-btn.cooldown {
+    background: #F0F0F0;
+    color: var(--text-muted);
+    cursor: default;
+    font-size: 8px;
+    letter-spacing: 0.5px;
   }
 
   .phase2-badge {
@@ -1249,14 +1274,15 @@ const state = {
 };
 
 const GRAVES_DATA = [
-  { name: '첫 번째 스마트폰', emoji: '📱', epitaph: '고등학교 3년을 함께한 친구', category: '전자기기', period: '2018~2023', wilted: false },
-  { name: '낡은 운동화', emoji: '👟', epitaph: '첫 마라톤 완주의 증거', category: '옷/신발', period: '2020~2024', wilted: true },
-  { name: '곰 인형', emoji: '🧸', epitaph: '어릴 적 나의 수호자', category: '인형/장난감', period: '1998~2015', wilted: false },
-  { name: '기타', emoji: '🎸', epitaph: '대학 밴드의 추억', category: '취미용품', period: '2019~2023', wilted: false },
-  { name: '일기장', emoji: '📔', epitaph: '10대의 나를 담은 시간', category: '문구/책', period: '2015~2020', wilted: false },
-  { name: '머그컵', emoji: '☕', epitaph: '매일 아침을 함께한 루틴', category: '생활용품', period: '2021~2025', wilted: false },
-  { name: '카세트 테이프', emoji: '📼', epitaph: '아빠가 녹음해준 목소리', category: '추억의 물건', period: '1995~2010', wilted: false },
+  { name: '첫 번째 스마트폰', emoji: '📱', epitaph: '고등학교 3년을 함께한 친구', category: '전자기기', period: '2018~2023', wilted: false, cooldownMin: 0 },
+  { name: '낡은 운동화', emoji: '👟', epitaph: '첫 마라톤 완주의 증거', category: '옷/신발', period: '2020~2024', wilted: true, cooldownMin: 423 },
+  { name: '곰 인형', emoji: '🧸', epitaph: '어릴 적 나의 수호자', category: '인형/장난감', period: '1998~2015', wilted: false, cooldownMin: 0 },
+  { name: '기타', emoji: '🎸', epitaph: '대학 밴드의 추억', category: '취미용품', period: '2019~2023', wilted: false, cooldownMin: 187 },
+  { name: '일기장', emoji: '📔', epitaph: '10대의 나를 담은 시간', category: '문구/책', period: '2015~2020', wilted: false, cooldownMin: 0 },
+  { name: '머그컵', emoji: '☕', epitaph: '매일 아침을 함께한 루틴', category: '생활용품', period: '2021~2025', wilted: false, cooldownMin: 698 },
+  { name: '카세트 테이프', emoji: '📼', epitaph: '아빠가 녹음해준 목소리', category: '추억의 물건', period: '1995~2010', wilted: false, cooldownMin: 0 },
 ];
+// cooldownMin: 0 = 헌화 가능, >0 = 남은 쿨다운 분
 
 // Economy calculation
 function calcEconomy() {
@@ -1326,13 +1352,21 @@ function renderGraves() {
   GRAVES_DATA.slice(0, dataCount).forEach((g, i) => {
     const isWilted = g.wilted;
     const decoEmoji = decoOff ? '' : (i % 3 === 0 ? '🌸' : i % 3 === 1 ? '🌿' : '');
+    const cd = g.cooldownMin;
+    const canOffer = cd === 0;
+    const cdH = Math.floor(cd / 60);
+    const cdM = cd % 60;
+    const cdText = canOffer ? '' : `${String(cdH).padStart(2,'0')}:${String(cdM).padStart(2,'0')}`;
     html += `<div class="grave-slot free fade-in" style="animation-delay:${i*0.05}s" onclick="openGraveDetail(${i})">
       ${isWilted ? '<div class="wilted-badge">헌화 필요 🥀</div>' : ''}
       ${decoOff && decoEmoji ? '<div class="phase2-badge">Phase 2</div>' : ''}
       <div class="grave-emoji${decoOff && decoEmoji ? ' greyed':''}">${g.emoji}</div>
       <div class="grave-name">${g.name}</div>
       <div class="grave-year">${g.period}</div>
-      ${decoEmoji ? `<div class="grave-decoration${decoOff ? ' phase2-off':''}">🌸</div>` : ''}
+      ${canOffer
+        ? `<button class="offering-btn available" onclick="event.stopPropagation()">💐 헌화하기</button>`
+        : `<button class="offering-btn cooldown" onclick="event.stopPropagation()">⏳ ${cdText}</button>`
+      }
     </div>`;
   });
 
