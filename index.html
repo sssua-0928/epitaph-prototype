@@ -124,13 +124,102 @@
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
 
+  /* ── STATUS BAR ── */
+  .status-bar {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    z-index: 5;
+  }
+  .status-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .status-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+  .status-label {
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  .status-icon { font-size: 14px; }
+
+  /* ── BOTTOM ACTION BAR ── */
+  .action-bar {
+    display: flex;
+    gap: 6px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--border);
+    position: absolute;
+    bottom: 0;
+    left: 0; right: 0;
+    z-index: 5;
+  }
+  .action-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 8px 4px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .action-btn:active { transform: scale(0.96); }
+  .action-btn .action-icon { font-size: 16px; }
+  .action-btn .action-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: center;
+    line-height: 1.2;
+  }
+  .action-btn .action-sub {
+    font-size: 8px;
+    color: var(--text-secondary);
+  }
+  .action-btn.primary {
+    background: var(--grass);
+    border-color: var(--grass-dark);
+  }
+  .action-btn.primary .action-label { color: white; }
+  .action-btn.primary .action-sub { color: rgba(255,255,255,0.7); }
+  .action-btn.petal-action {
+    background: var(--petal-light);
+    border-color: var(--petal);
+  }
+  .action-btn.exchange {
+    background: #E3F2FD;
+    border-color: #90CAF9;
+  }
+  .action-btn.checkin {
+    background: #FFF8E1;
+    border-color: #FFE082;
+  }
+
   /* ── CEMETERY TAB ── */
   .cemetery-bg {
     min-height: 100%;
     background:
       radial-gradient(ellipse 80% 40% at 50% 100%, #A5D66A 0%, #8BC34A 40%, transparent 70%),
       linear-gradient(180deg, #E8F5D0 0%, #D4EBB0 100%);
-    padding: 20px 16px 24px;
+    padding: 12px 16px 80px;
     position: relative;
   }
   .cemetery-bg::after {
@@ -816,8 +905,57 @@
   <div class="content-area">
     <!-- TAB A: CEMETERY -->
     <div class="tab-panel active" id="panel-cemetery">
+      <!-- STATUS BAR -->
+      <div class="status-bar">
+        <div class="status-item">
+          <span class="status-icon">🌸</span>
+          <span class="status-value" id="statusPetal">84</span>
+          <span class="status-label">꽃잎</span>
+        </div>
+        <div class="status-item">
+          <span class="status-icon">🪦</span>
+          <span class="status-value" id="statusGraves">7/<span id="statusMaxFree">10</span></span>
+          <span class="status-label">묘비</span>
+        </div>
+        <div class="status-item">
+          <span class="status-icon">📅</span>
+          <span class="status-value">✓</span>
+          <span class="status-label">오늘 출석</span>
+        </div>
+        <div class="status-item">
+          <span class="status-icon">🎬</span>
+          <span class="status-value" id="statusAdLeft">2/<span id="statusAdMax">3</span></span>
+          <span class="status-label">광고 남음</span>
+        </div>
+      </div>
+
+      <!-- CEMETERY GRID -->
       <div class="cemetery-bg">
         <div class="graves-grid" id="gravesGrid"></div>
+      </div>
+
+      <!-- BOTTOM ACTION BAR -->
+      <div class="action-bar">
+        <button class="action-btn checkin">
+          <span class="action-icon">📅</span>
+          <span class="action-label">출석체크</span>
+          <span class="action-sub">+<span id="actionAttend">3</span>꽃잎</span>
+        </button>
+        <button class="action-btn petal-action">
+          <span class="action-icon">🎬</span>
+          <span class="action-label">꽃잎 충전</span>
+          <span class="action-sub">광고 <span id="actionAdLeft">2</span>회 남음</span>
+        </button>
+        <button class="action-btn exchange">
+          <span class="action-icon">💎</span>
+          <span class="action-label">포인트 교환</span>
+          <span class="action-sub" id="actionExchange">토스포인트</span>
+        </button>
+        <button class="action-btn primary">
+          <span class="action-icon">➕</span>
+          <span class="action-label">묘비 등록</span>
+          <span class="action-sub">새로운 기억</span>
+        </button>
       </div>
     </div>
 
@@ -1337,6 +1475,23 @@ function updateSliderGradient(slider) {
 function renderPetalBadge() {
   const eco = calcEconomy();
   document.getElementById('petalBalance').textContent = eco.weeklyTotal;
+  // Status bar updates
+  const sp = document.getElementById('statusPetal');
+  if (sp) sp.textContent = eco.weeklyTotal;
+  const smf = document.getElementById('statusMaxFree');
+  if (smf) smf.textContent = state.freeGraves;
+  const sam = document.getElementById('statusAdMax');
+  if (sam) sam.textContent = state.dailyAdCap === 99 ? '∞' : state.dailyAdCap;
+  const sal = document.getElementById('statusAdLeft');
+  if (sal) sal.innerHTML = (state.dailyAdCap === 99 ? '∞' : '2') + '/<span id="statusAdMax">' + (state.dailyAdCap === 99 ? '∞' : state.dailyAdCap) + '</span>';
+  // Action bar updates
+  const aa = document.getElementById('actionAttend');
+  if (aa) aa.textContent = state.attendanceReward;
+  const aal = document.getElementById('actionAdLeft');
+  if (aal) aal.textContent = state.dailyAdCap === 99 ? '∞' : '2';
+  // Exchange visibility
+  const ae = document.getElementById('actionExchange');
+  if (ae) ae.textContent = state.tossPointPhase1 ? '토스포인트' : 'Phase 2';
 }
 
 function render() {
