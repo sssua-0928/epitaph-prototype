@@ -1358,7 +1358,6 @@ function renderGraves() {
     const cdM = cd % 60;
     const cdText = canOffer ? '' : `${String(cdH).padStart(2,'0')}:${String(cdM).padStart(2,'0')}`;
     html += `<div class="grave-slot free fade-in" style="animation-delay:${i*0.05}s" onclick="openGraveDetail(${i})">
-      ${isWilted ? '<div class="wilted-badge">헌화 필요 🥀</div>' : ''}
       ${decoOff && decoEmoji ? '<div class="phase2-badge">Phase 2</div>' : ''}
       <div class="grave-emoji${decoOff && decoEmoji ? ' greyed':''}">${g.emoji}</div>
       <div class="grave-name">${g.name}</div>
