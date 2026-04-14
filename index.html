@@ -1529,7 +1529,7 @@
   <div class="register-overlay" id="registerOverlay">
     <div class="register-header">
       <button class="register-back" onclick="closeRegister()">←</button>
-      <div class="register-title">새로운 기억 안치하기</div>
+      <div class="register-title">묘비 새기기</div>
     </div>
     <div class="register-form">
       <div class="form-group">
@@ -1537,9 +1537,9 @@
         <input class="form-input" id="regName" type="text" maxlength="20" placeholder="예: 첫 번째 스마트폰">
       </div>
       <div class="form-group">
-        <label>에피타프 <span class="form-hint">(필수, 100자)</span></label>
-        <textarea class="form-textarea" id="regEpitaph" maxlength="100" placeholder="이 물건과의 추억을 한 줄로 남겨주세요"></textarea>
-        <div class="char-count"><span id="epitaphCount">0</span>/100</div>
+        <label>묘비명 <span class="form-hint">(필수, 50자)</span></label>
+        <textarea class="form-textarea" id="regEpitaph" maxlength="50" placeholder="이 물건에 새길 한마디를 남겨주세요"></textarea>
+        <div class="char-count"><span id="epitaphCount">0</span>/50</div>
       </div>
       <div class="form-group">
         <label>사진 <span class="form-hint">(선택)</span></label>
@@ -1548,14 +1548,14 @@
       <div class="form-group">
         <label>함께한 기간 <span class="form-hint">(선택)</span></label>
         <div style="display:flex;gap:8px;align-items:center;">
-          <input class="form-input" type="text" placeholder="2018.03" style="flex:1">
+          <input class="form-input" type="text" placeholder="2018" style="flex:1">
           <span style="color:var(--text-muted)">~</span>
-          <input class="form-input" type="text" placeholder="2023.12" style="flex:1">
+          <input class="form-input" type="text" placeholder="2023" style="flex:1">
         </div>
       </div>
       <div class="form-group">
         <label>꾸미기 <span class="form-hint">(스킨/장식)</span></label>
-        <div class="deco-btn" onclick="alert('준비 중이에요! 🎨\n\nPhase 2에서 묘비 스킨과 장식을 꾸밀 수 있어요.')">🎨 꾸미기 — 준비 중이에요</div>
+        <div class="deco-btn" onclick="showToast('준비 중이에요! 🎨')">🎨 꾸미기 — 준비 중이에요</div>
       </div>
       <button class="register-submit" onclick="submitRegister()">안치하기</button>
     </div>
@@ -2346,7 +2346,7 @@ function editGraveFromDetail() {
     btn.textContent = '안치하기';
     btn.onclick = submitRegister;
   };
-  document.querySelector('.register-title').textContent = '기억 수정하기';
+  document.querySelector('.register-title').textContent = '묘비 수정하기';
 }
 
 function deleteGraveFromDetail() {
