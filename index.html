@@ -1147,11 +1147,6 @@
             <span class="action-label">출석체크</span>
             <span class="action-sub">+<span id="actionAttend">5</span>꽃잎</span>
           </button>
-          <button class="action-btn exchange">
-            <span class="action-icon">💎</span>
-            <span class="action-label">포인트 교환</span>
-            <span class="action-sub" id="actionExchange">토스포인트</span>
-          </button>
           <button class="action-btn primary" onclick="openRegister()">
             <span class="action-icon">➕</span>
             <span class="action-label">묘비 등록</span>
@@ -1275,19 +1270,6 @@
         <div class="char-count"><span id="epitaphCount">0</span>/100</div>
       </div>
       <div class="form-group">
-        <label>카테고리 <span class="form-hint">(선택)</span></label>
-        <div class="category-pills">
-          <span class="cat-pill" onclick="selectCat(this)">📱 전자기기</span>
-          <span class="cat-pill" onclick="selectCat(this)">👗 패션</span>
-          <span class="cat-pill" onclick="selectCat(this)">🎁 선물</span>
-          <span class="cat-pill" onclick="selectCat(this)">🧸 인형</span>
-          <span class="cat-pill" onclick="selectCat(this)">📚 문구/책</span>
-          <span class="cat-pill" onclick="selectCat(this)">🏠 생활</span>
-          <span class="cat-pill" onclick="selectCat(this)">🎸 취미</span>
-          <span class="cat-pill" onclick="selectCat(this)">✏️ 직접입력</span>
-        </div>
-      </div>
-      <div class="form-group">
         <label>사진 <span class="form-hint">(선택)</span></label>
         <div class="photo-upload">📷 사진 추가하기</div>
       </div>
@@ -1389,9 +1371,9 @@
         <div class="option-group">
           <div class="option-label">무료 제공 수</div>
           <div class="pill-group">
+            <button class="pill-btn selected" data-key="freeGraves" data-val="1" onclick="setPill(this,'freeGraves',1)">1기 <span class="v2-badge">v2</span></button>
             <button class="pill-btn" data-key="freeGraves" data-val="3" onclick="setPill(this,'freeGraves',3)">3기</button>
-            <button class="pill-btn selected" data-key="freeGraves" data-val="5" onclick="setPill(this,'freeGraves',5)">5기 <span class="v2-badge">v2</span></button>
-            <button class="pill-btn" data-key="freeGraves" data-val="10" onclick="setPill(this,'freeGraves',10)">10기</button>
+            <button class="pill-btn" data-key="freeGraves" data-val="5" onclick="setPill(this,'freeGraves',5)">5기</button>
           </div>
         </div>
         <div class="option-group">
@@ -1450,8 +1432,8 @@
         <div class="option-group">
           <div class="option-label">토스포인트 전환 포함 여부</div>
           <div class="pill-group">
-            <button class="pill-btn selected" data-key="tossPointPhase1" data-val="true" onclick="setPill(this,'tossPointPhase1',true)">Phase 1 포함</button>
-            <button class="pill-btn" data-key="tossPointPhase1" data-val="false" onclick="setPill(this,'tossPointPhase1',false)">Phase 2로 이동</button>
+            <button class="pill-btn" data-key="tossPointPhase1" data-val="true" onclick="setPill(this,'tossPointPhase1',true)">Phase 1 포함</button>
+            <button class="pill-btn selected" data-key="tossPointPhase1" data-val="false" onclick="setPill(this,'tossPointPhase1',false)">Phase 2로 이동</button>
           </div>
         </div>
         <div class="option-group">
@@ -1495,12 +1477,12 @@ const state = {
   dailyAdCap: 99,
   attendanceReward: 5,
   conversionRatio: '100=10',
-  freeGraves: 5,
+  freeGraves: 1,
   maxCap: 50,
   purchaseUnit: 15,
   reviewMethod: 'ai',
   uploadRestriction: 'photo',
-  tossPointPhase1: true,
+  tossPointPhase1: false,
   decorationPhase1: true,
   dau: 300,
   activeTab: 'cemetery'
@@ -1748,9 +1730,6 @@ function renderPetalBadge() {
   // Action bar updates
   const aa = document.getElementById('actionAttend');
   if (aa) aa.textContent = state.attendanceReward;
-  // Exchange visibility
-  const ae = document.getElementById('actionExchange');
-  if (ae) ae.textContent = state.tossPointPhase1 ? '토스포인트' : 'Phase 2';
 }
 
 function render() {
