@@ -459,16 +459,58 @@
     cursor: pointer;
   }
   .empty-land-plus {
-    font-size: 22px;
-    font-weight: 700;
-    color: #8BC34A;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #E8F5E9;
+    border: 2px solid #8BC34A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 300;
+    color: #6A9E36;
     line-height: 1;
   }
   .empty-land-label {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 600;
     color: #6A9E36;
     text-align: center;
+    line-height: 1.3;
+  }
+
+  /* 잠긴 땅 */
+  .grave-slot.locked-land {
+    background: repeating-linear-gradient(
+      45deg,
+      rgba(255,213,79,0.08),
+      rgba(255,213,79,0.08) 8px,
+      rgba(255,255,255,0.3) 8px,
+      rgba(255,255,255,0.3) 16px
+    );
+    border: 2px solid #FFE082;
+    cursor: pointer;
+  }
+  .locked-land-icon {
+    font-size: 22px;
+    line-height: 1;
+  }
+  .locked-land-cost {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #F57F17;
+  }
+  .locked-land-cost .petal-icon {
+    font-size: 13px;
+  }
+  .locked-land-label {
+    font-size: 8px;
+    color: #F9A825;
+    font-weight: 500;
   }
 
   .grave-emoji {
@@ -1596,10 +1638,39 @@
   <!-- DELETE CONFIRM MODAL -->
   <div class="delete-modal-overlay" id="deleteModalOverlay">
     <div class="delete-modal">
-      <p style="font-size:14px;line-height:1.6;">정말 소멸시키겠습니까?<br><span style="color:#C62828;">이 기억은 영구히 사라지며 복구할 수 없어요</span></p>
+      <p style="font-size:14px;line-height:1.6;"><span id="deleteTargetName"></span>의 묘비를 정말 소멸시키겠습니까?<br><span style="color:#C62828;">이 묘비는 복구할 수 없어요</span></p>
       <div class="delete-modal-btns">
         <button class="delete-cancel" onclick="closeDeleteModal()">취소</button>
         <button class="delete-confirm" onclick="confirmDelete()">광고 보고 소멸하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAND PURCHASE MODAL -->
+  <div class="delete-modal-overlay" id="landModalOverlay">
+    <div class="delete-modal">
+      <p style="font-size:14px;line-height:1.6;">새로운 땅을 개간하시겠어요?<br><span style="color:#F57F17;font-weight:700;">🌸 <span id="landCostDisplay">10</span>꽃잎이 필요해요</span></p>
+      <div class="delete-modal-btns">
+        <button class="delete-cancel" onclick="closeLandModal()">취소</button>
+        <button class="delete-confirm" style="background:#FFF3E0;color:#F57F17;" onclick="confirmLandPurchase()">개간하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OFFERING MODAL -->
+  <div class="delete-modal-overlay" id="offeringModalOverlay">
+    <div class="delete-modal">
+      <p style="font-size:14px;line-height:1.6;margin-bottom:16px;"><span id="offeringTargetName"></span>에게 헌화하시겠어요?</p>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button onclick="confirmOfferingAd()" style="width:100%;padding:12px;border:none;border-radius:10px;background:var(--petal);color:white;font-size:13px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+          <span>🎬 광고 보고 헌화</span>
+          <span style="font-size:12px;opacity:0.9;">+<span id="offeringAdReward">10</span>꽃잎</span>
+        </button>
+        <button onclick="confirmOfferingPetal()" style="width:100%;padding:12px;border:none;border-radius:10px;background:#FFF3E0;color:#F57F17;font-size:13px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+          <span>🌸 <span id="offeringPetalCost">20</span>꽃잎으로 헌화</span>
+          <span style="font-size:11px;opacity:0.7;">광고없음</span>
+        </button>
+        <button onclick="closeOfferingModal()" style="width:100%;padding:10px;border:none;border-radius:10px;background:#F5F5F5;color:#757575;font-size:13px;font-weight:600;cursor:pointer;">취소</button>
       </div>
     </div>
   </div>
@@ -1783,12 +1854,12 @@ const state = {
 
 const GRAVES_DATA = [
   { name: '첫 번째 스마트폰', emoji: '📱', epitaph: '고등학교 3년을 함께한 친구', period: '2018~2023', cooldownMin: 0, offeringCount: 12, registered: true },
-  { name: '낡은 운동화', emoji: '👟', epitaph: '첫 마라톤 완주의 증거', period: '2020~2024', cooldownMin: 423, offeringCount: 5, registered: true },
-  { name: '곰 인형', emoji: '🧸', epitaph: '어릴 적 나의 수호자', period: '1998~2015', cooldownMin: 0, offeringCount: 31, registered: true },
-  { name: '기타', emoji: '🎸', epitaph: '대학 밴드의 추억', period: '2019~2023', cooldownMin: 187, offeringCount: 8, registered: true },
-  { name: '일기장', emoji: '📔', epitaph: '10대의 나를 담은 시간', period: '2015~2020', cooldownMin: 0, offeringCount: 2, registered: true },
-  { name: '머그컵', emoji: '☕', epitaph: '매일 아침을 함께한 루틴', period: '2021~2025', cooldownMin: 698, offeringCount: 15, registered: true },
-  { name: '카세트 테이프', emoji: '📼', epitaph: '아빠가 녹음해준 목소리', period: '1995~2010', cooldownMin: 0, offeringCount: 0, registered: true },
+  { name: '', emoji: '', epitaph: '', period: '', cooldownMin: 0, offeringCount: 0, registered: false },
+  { name: '', emoji: '', epitaph: '', period: '', cooldownMin: 0, offeringCount: 0, registered: false },
+  { name: '', emoji: '', epitaph: '', period: '', cooldownMin: 0, offeringCount: 0, registered: false },
+  { name: '', emoji: '', epitaph: '', period: '', cooldownMin: 0, offeringCount: 0, registered: false },
+  { name: '', emoji: '', epitaph: '', period: '', cooldownMin: 0, offeringCount: 0, registered: false },
+  { name: '', emoji: '', epitaph: '', period: '', cooldownMin: 0, offeringCount: 0, registered: false },
 ];
 // cooldownMin: 0 = 헌화 가능, >0 = 남은 쿨다운 분
 // registered: true = 묘비 있는 땅, false = 빈 땅(개간됨, 묘비 미등록)
@@ -1878,37 +1949,30 @@ function renderGraves() {
       // 2. 빈 땅 (개간됨, 묘비 미등록)
       html += `<div class="grave-slot empty-land fade-in" style="animation-delay:${slotIndex*0.05}s" onclick="openRegister()">
         <div class="empty-land-plus">+</div>
-        <div class="empty-land-label">탭하여<br>묘비 세우기</div>
+        <div class="empty-land-label">묘비 세우기</div>
       </div>`;
     }
     slotIndex++;
   }
 
-  // 다음 슬롯: 해금 가능 OR 잠긴 땅
+  // 잠긴 땅 (미개간) — 공사판 스타일
   if (openedLands < GRAVES_DATA.length) {
-    if (state.nextSlotUnlockable) {
-      // 4. 해금 가능 (헌화 후 활성화)
-      const nextGrave = GRAVES_DATA[openedLands];
-      html += `<div class="grave-slot unlockable fade-in" onclick="unlockNextSlot()">
-        <div style="font-size:20px">🔓</div>
-        <div class="unlock-label">탭하여 해금!</div>
-        <div class="unlock-sub">${nextGrave ? nextGrave.name : '새 묘비'}</div>
-      </div>`;
-    } else {
-      // 3. 잠긴 땅 (미개간)
-      html += `<div class="grave-slot extra" style="opacity:0.6">
-        <div style="font-size:14px;color:#A5C880">🔒</div>
-        <div class="add-slot-label" style="color:#A5C880;font-size:9px">헌화하면 해금</div>
-      </div>`;
-    }
+    const landCost = 10 + (openedLands - 1) * 10; // 점진적: 10, 20, 30...
+    html += `<div class="grave-slot locked-land fade-in" style="animation-delay:${slotIndex*0.05}s" onclick="openLandPurchase(${landCost})">
+      <div class="locked-land-icon">🚧</div>
+      <div class="locked-land-cost"><span class="petal-icon">🌸</span> ${landCost}</div>
+      <div class="locked-land-label">개간하기</div>
+    </div>`;
     slotIndex++;
   }
 
   // 추가 잠긴 슬롯 미리보기
   const extraPreview = Math.min(3, GRAVES_DATA.length - openedLands - 1);
   for (let i = 0; i < extraPreview && i >= 0; i++) {
-    html += `<div class="grave-slot extra" style="opacity:0.3">
-      <div style="font-size:14px;color:#C5E1A5">🔒</div>
+    const previewCost = 10 + (openedLands + i) * 10;
+    html += `<div class="grave-slot locked-land" style="opacity:0.4">
+      <div class="locked-land-icon">🚧</div>
+      <div class="locked-land-cost"><span class="petal-icon">🌸</span> ${previewCost}</div>
     </div>`;
   }
 
@@ -2112,29 +2176,71 @@ if (dauEl) {
 }
 
 // Grave detail sheet
-// Offering (헌화)
+// Offering (헌화) — 모달 방식
+let pendingOfferingIdx = -1;
+
 function doOffering(idx) {
   const g = GRAVES_DATA[idx];
   if (!g || g.cooldownMin > 0) return;
-  // Set 12h cooldown (720 minutes)
+  pendingOfferingIdx = idx;
+  document.getElementById('offeringTargetName').textContent = g.name;
+  document.getElementById('offeringAdReward').textContent = state.rewardAdPetal;
+  document.getElementById('offeringPetalCost').textContent = state.rewardAdPetal * 2; // 이용권 가격 = 보상의 2배
+  document.getElementById('offeringModalOverlay').classList.add('open');
+}
+
+function confirmOfferingAd() {
+  // 광고 보고 헌화 → 꽃잎 획득
+  if (pendingOfferingIdx < 0) return;
+  const g = GRAVES_DATA[pendingOfferingIdx];
   g.cooldownMin = 720;
-  // Check if next slot should become unlockable
-  const registeredGraves = GRAVES_DATA.slice(0, state.openedLands).filter(gr => gr && gr.registered);
-  const allOffered = registeredGraves.every(gr => gr.cooldownMin > 0);
-  if (allOffered && registeredGraves.length > 0 && state.openedLands < GRAVES_DATA.length) {
-    state.nextSlotUnlockable = true;
-  }
+  g.offeringCount = (g.offeringCount || 0) + 1;
+  closeOfferingModal();
+  closeGraveSheet();
   triggerOfferingEffect();
   showToast(`${g.name}에게 헌화했어요 💐 +${state.rewardAdPetal}꽃잎`);
   render();
 }
 
-function unlockNextSlot() {
-  if (!state.nextSlotUnlockable) return;
-  state.openedLands += 1;
-  state.nextSlotUnlockable = false;
-  showToast(`땅이 개간되었어요! 🌱 묘비를 세울 수 있어요`);
+function confirmOfferingPetal() {
+  // 꽃잎으로 헌화 → 광고 스킵, 꽃잎 획득 없음
+  if (pendingOfferingIdx < 0) return;
+  const g = GRAVES_DATA[pendingOfferingIdx];
+  g.cooldownMin = 720;
+  g.offeringCount = (g.offeringCount || 0) + 1;
+  closeOfferingModal();
+  closeGraveSheet();
+  triggerOfferingEffect();
+  showToast(`${g.name}에게 헌화했어요 💐`);
   render();
+}
+
+function closeOfferingModal() {
+  document.getElementById('offeringModalOverlay').classList.remove('open');
+  pendingOfferingIdx = -1;
+}
+
+let pendingLandCost = 0;
+
+function openLandPurchase(cost) {
+  pendingLandCost = cost;
+  document.getElementById('landCostDisplay').textContent = cost;
+  document.getElementById('landModalOverlay').classList.add('open');
+}
+
+function confirmLandPurchase() {
+  const newIdx = state.openedLands;
+  if (newIdx < GRAVES_DATA.length) {
+    GRAVES_DATA[newIdx].registered = false;
+  }
+  state.openedLands += 1;
+  closeLandModal();
+  showToast(`땅이 개간되었어요! 🌱 (🌸 ${pendingLandCost}꽃잎)`);
+  render();
+}
+
+function closeLandModal() {
+  document.getElementById('landModalOverlay').classList.remove('open');
 }
 
 // Register form
@@ -2286,18 +2392,8 @@ function doOfferingFromDetail() {
   if (currentDetailIdx < 0) return;
   const g = GRAVES_DATA[currentDetailIdx];
   if (!g || g.cooldownMin > 0) return;
-  g.cooldownMin = 720;
-  g.offeringCount = (g.offeringCount || 0) + 1;
-  triggerOfferingEffect();
-  showToast(`${g.name}에게 헌화했어요 💐 +${state.rewardAdPetal}꽃잎`);
-  // Check unlock
-  const registeredGraves = GRAVES_DATA.slice(0, state.openedLands).filter(gr => gr && gr.registered);
-  const allOffered = registeredGraves.every(gr => gr.cooldownMin > 0);
-  if (allOffered && registeredGraves.length > 0 && state.openedLands < GRAVES_DATA.length) {
-    state.nextSlotUnlockable = true;
-  }
-  closeGraveSheet();
-  render();
+  // 상세 바텀시트에서도 동일한 헌화 모달 사용
+  doOffering(currentDetailIdx);
 }
 
 function triggerOfferingEffect() {
@@ -2349,6 +2445,8 @@ function editGraveFromDetail() {
 
 function deleteGraveFromDetail() {
   if (currentDetailIdx < 0) return;
+  const g = GRAVES_DATA[currentDetailIdx];
+  document.getElementById('deleteTargetName').textContent = g.name;
   document.getElementById('deleteModalOverlay').classList.add('open');
 }
 
@@ -2363,7 +2461,7 @@ function confirmDelete() {
   g.period = '';
   g.cooldownMin = 0;
   g.offeringCount = 0;
-  showToast(`소멸되었어요`);
+  showToast(`${name}의 묘비는 소멸되었어요`);
   closeDeleteModal();
   closeGraveSheet();
   render();
