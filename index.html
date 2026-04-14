@@ -1034,6 +1034,111 @@
   }
   .grave-close-btn:active { background: var(--grass-dark); }
 
+  .grave-actions {
+    display: flex;
+    gap: 8px;
+    padding: 0 20px;
+    margin-bottom: 12px;
+  }
+  .grave-action-btn {
+    flex: 1;
+    padding: 10px 0;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.2s;
+  }
+  .grave-action-btn:active { transform: scale(0.96); }
+  .grave-action-btn.offering {
+    background: var(--petal);
+    color: white;
+  }
+  .grave-action-btn.offering.disabled {
+    background: #F0F0F0;
+    color: var(--text-muted);
+    cursor: default;
+  }
+  .grave-action-btn.edit {
+    background: #E3F2FD;
+    color: #1565C0;
+  }
+  .grave-action-btn.delete {
+    background: #FFEBEE;
+    color: #C62828;
+  }
+
+  .grave-offering-info {
+    text-align: center;
+    padding: 8px 20px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .grave-offering-count {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--petal);
+  }
+
+  /* ── DELETE CONFIRM MODAL ── */
+  .delete-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 300;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .delete-modal-overlay.open { display: flex; }
+  .delete-modal {
+    background: white;
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 300px;
+    text-align: center;
+  }
+  .delete-modal h3 {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  .delete-modal p {
+    font-size: 12px;
+    color: #C62828;
+    margin-bottom: 16px;
+  }
+  .delete-modal input {
+    width: 100%;
+    padding: 10px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .delete-modal input:focus { outline: none; border-color: #C62828; }
+  .delete-modal-btns {
+    display: flex;
+    gap: 8px;
+  }
+  .delete-modal-btns button {
+    flex: 1;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .delete-cancel { background: #F5F5F5; color: var(--text-primary); }
+  .delete-confirm { background: #FFCDD2; color: #C62828; }
+  .delete-confirm:disabled { background: #F5F5F5; color: var(--text-muted); cursor: default; }
+
   /* ── Animations ── */
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(8px); }
@@ -1332,7 +1437,28 @@
       <span>함께한 기간</span>
       <span class="period-range" id="graveDetailPeriod">2018 ~ 2023</span>
     </div>
+    <div class="grave-offering-info">
+      💐 누적 <span class="grave-offering-count" id="graveOfferingCount">0</span>회 헌화
+    </div>
+    <div class="grave-actions">
+      <button class="grave-action-btn offering" id="graveOfferBtn" onclick="doOfferingFromDetail()">💐 헌화</button>
+      <button class="grave-action-btn edit" onclick="editGraveFromDetail()">✏️ 편집</button>
+      <button class="grave-action-btn delete" onclick="deleteGraveFromDetail()">🗑️ 삭제</button>
+    </div>
     <button class="grave-close-btn" onclick="closeGraveSheet()">돌아가기</button>
+  </div>
+
+  <!-- DELETE CONFIRM MODAL -->
+  <div class="delete-modal-overlay" id="deleteModalOverlay">
+    <div class="delete-modal">
+      <h3>정말 소멸시키겠습니까?</h3>
+      <p>이 기억은 영구히 사라지며 복구할 수 없어요</p>
+      <input type="text" id="deleteConfirmInput" placeholder="물건 이름을 입력하세요" oninput="checkDeleteConfirm()">
+      <div class="delete-modal-btns">
+        <button class="delete-cancel" onclick="closeDeleteModal()">취소</button>
+        <button class="delete-confirm" id="deleteConfirmBtn" disabled onclick="confirmDelete()">소멸하기</button>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -1512,13 +1638,13 @@ const state = {
 };
 
 const GRAVES_DATA = [
-  { name: '첫 번째 스마트폰', emoji: '📱', epitaph: '고등학교 3년을 함께한 친구', category: '전자기기', period: '2018~2023', wilted: false, cooldownMin: 0 },
-  { name: '낡은 운동화', emoji: '👟', epitaph: '첫 마라톤 완주의 증거', category: '옷/신발', period: '2020~2024', wilted: true, cooldownMin: 423 },
-  { name: '곰 인형', emoji: '🧸', epitaph: '어릴 적 나의 수호자', category: '인형/장난감', period: '1998~2015', wilted: false, cooldownMin: 0 },
-  { name: '기타', emoji: '🎸', epitaph: '대학 밴드의 추억', category: '취미용품', period: '2019~2023', wilted: false, cooldownMin: 187 },
-  { name: '일기장', emoji: '📔', epitaph: '10대의 나를 담은 시간', category: '문구/책', period: '2015~2020', wilted: false, cooldownMin: 0 },
-  { name: '머그컵', emoji: '☕', epitaph: '매일 아침을 함께한 루틴', category: '생활용품', period: '2021~2025', wilted: false, cooldownMin: 698 },
-  { name: '카세트 테이프', emoji: '📼', epitaph: '아빠가 녹음해준 목소리', category: '추억의 물건', period: '1995~2010', wilted: false, cooldownMin: 0 },
+  { name: '첫 번째 스마트폰', emoji: '📱', epitaph: '고등학교 3년을 함께한 친구', period: '2018~2023', cooldownMin: 0, offeringCount: 12 },
+  { name: '낡은 운동화', emoji: '👟', epitaph: '첫 마라톤 완주의 증거', period: '2020~2024', cooldownMin: 423, offeringCount: 5 },
+  { name: '곰 인형', emoji: '🧸', epitaph: '어릴 적 나의 수호자', period: '1998~2015', cooldownMin: 0, offeringCount: 31 },
+  { name: '기타', emoji: '🎸', epitaph: '대학 밴드의 추억', period: '2019~2023', cooldownMin: 187, offeringCount: 8 },
+  { name: '일기장', emoji: '📔', epitaph: '10대의 나를 담은 시간', period: '2015~2020', cooldownMin: 0, offeringCount: 2 },
+  { name: '머그컵', emoji: '☕', epitaph: '매일 아침을 함께한 루틴', period: '2021~2025', cooldownMin: 698, offeringCount: 15 },
+  { name: '카세트 테이프', emoji: '📼', epitaph: '아빠가 녹음해준 목소리', period: '1995~2010', cooldownMin: 0, offeringCount: 0 },
 ];
 // cooldownMin: 0 = 헌화 가능, >0 = 남은 쿨다운 분
 
@@ -1904,21 +2030,110 @@ document.getElementById('regEpitaph').addEventListener('input', function() {
   document.getElementById('epitaphCount').textContent = this.value.length;
 });
 
+let currentDetailIdx = -1;
+
 function openGraveDetail(idx) {
   const g = GRAVES_DATA[idx];
   if (!g) return;
+  currentDetailIdx = idx;
   document.getElementById('graveDetailEmoji').textContent = g.emoji;
   document.getElementById('graveDetailName').textContent = g.name;
-  document.getElementById('graveDetailCategory').textContent = g.category;
+  document.getElementById('graveDetailCategory').textContent = '';
   document.getElementById('graveDetailEpitaph').textContent = g.epitaph;
   document.getElementById('graveDetailPeriod').textContent = g.period;
+  document.getElementById('graveOfferingCount').textContent = g.offeringCount || 0;
+
+  // Offering button state
+  const btn = document.getElementById('graveOfferBtn');
+  const canOffer = g.cooldownMin === 0;
+  if (canOffer) {
+    btn.className = 'grave-action-btn offering';
+    btn.innerHTML = '💐 헌화';
+    btn.onclick = doOfferingFromDetail;
+  } else {
+    const h = Math.floor(g.cooldownMin / 60);
+    const m = g.cooldownMin % 60;
+    btn.className = 'grave-action-btn offering disabled';
+    btn.innerHTML = `⏳ ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+    btn.onclick = null;
+  }
 
   document.getElementById('graveSheet').classList.add('open');
   document.getElementById('graveOverlay').classList.add('visible');
 }
+
 function closeGraveSheet() {
   document.getElementById('graveSheet').classList.remove('open');
   document.getElementById('graveOverlay').classList.remove('visible');
+  currentDetailIdx = -1;
+}
+
+function doOfferingFromDetail() {
+  if (currentDetailIdx < 0) return;
+  const g = GRAVES_DATA[currentDetailIdx];
+  if (!g || g.cooldownMin > 0) return;
+  g.cooldownMin = 720;
+  g.offeringCount = (g.offeringCount || 0) + 1;
+  showToast(`${g.name}에게 헌화했어요 💐 +${state.rewardAdPetal}꽃잎`);
+  // Check unlock
+  const usedGraves = Math.min(GRAVES_DATA.length, state.freeGraves);
+  const allOffered = GRAVES_DATA.slice(0, usedGraves).every(gr => gr.cooldownMin > 0);
+  if (allOffered && state.freeGraves < GRAVES_DATA.length) {
+    state.nextSlotUnlockable = true;
+  }
+  closeGraveSheet();
+  render();
+}
+
+function editGraveFromDetail() {
+  if (currentDetailIdx < 0) return;
+  const g = GRAVES_DATA[currentDetailIdx];
+  closeGraveSheet();
+  // Pre-fill register form for editing
+  openRegister();
+  document.getElementById('regName').value = g.name;
+  document.getElementById('regEpitaph').value = g.epitaph;
+  document.getElementById('epitaphCount').textContent = g.epitaph.length;
+  // Change button text
+  const btn = document.querySelector('.register-submit');
+  btn.textContent = '저장하기 (광고 시청 후)';
+  btn.onclick = function() {
+    const name = document.getElementById('regName').value.trim();
+    if (!name) return;
+    showToast(`수정되었어요 ✓`);
+    closeRegister();
+    btn.textContent = '안치하기';
+    btn.onclick = submitRegister;
+  };
+  document.querySelector('.register-title').textContent = '기억 수정하기';
+}
+
+function deleteGraveFromDetail() {
+  if (currentDetailIdx < 0) return;
+  const g = GRAVES_DATA[currentDetailIdx];
+  document.getElementById('deleteConfirmInput').value = '';
+  document.getElementById('deleteConfirmBtn').disabled = true;
+  document.getElementById('deleteConfirmInput').placeholder = g.name + ' 을(를) 입력하세요';
+  document.getElementById('deleteModalOverlay').classList.add('open');
+}
+
+function checkDeleteConfirm() {
+  if (currentDetailIdx < 0) return;
+  const g = GRAVES_DATA[currentDetailIdx];
+  const input = document.getElementById('deleteConfirmInput').value.trim();
+  document.getElementById('deleteConfirmBtn').disabled = (input !== g.name);
+}
+
+function confirmDelete() {
+  if (currentDetailIdx < 0) return;
+  const g = GRAVES_DATA[currentDetailIdx];
+  showToast(`${g.name}이 소멸되었어요`);
+  closeDeleteModal();
+  closeGraveSheet();
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModalOverlay').classList.remove('open');
 }
 
 // Init
