@@ -453,6 +453,23 @@
     font-weight: 700;
     color: #6A9E36;
   }
+  .grave-slot.empty-land {
+    background: rgba(255,255,255,0.6);
+    border: 2px dashed #8BC34A;
+    cursor: pointer;
+  }
+  .empty-land-plus {
+    font-size: 22px;
+    font-weight: 700;
+    color: #8BC34A;
+    line-height: 1;
+  }
+  .empty-land-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #6A9E36;
+    text-align: center;
+  }
 
   .grave-emoji {
     font-size: 22px;
@@ -1375,7 +1392,7 @@
         <div class="status-item">
           <span class="status-icon">🪦</span>
           <span class="status-value" id="statusGraves">1/<span id="statusMaxFree">1</span></span>
-          <span class="status-label">묘비</span>
+          <span class="status-label">묘비/땅</span>
         </div>
         <div class="status-item">
           <span class="status-icon">📅</span>
@@ -1753,7 +1770,8 @@ const state = {
   dailyAdCap: 99,
   attendanceReward: 5,
   conversionRatio: '100=10',
-  freeGraves: 1,
+  freeGraves: 1,       // 옵션 패널용 (무료 제공 수 설정)
+  openedLands: 1,      // 실제 개간된 땅 수 (기본 1)
   maxCap: 50,
   purchaseUnit: 15,
   reviewMethod: 'ai',
@@ -1766,15 +1784,16 @@ const state = {
 };
 
 const GRAVES_DATA = [
-  { name: '첫 번째 스마트폰', emoji: '📱', epitaph: '고등학교 3년을 함께한 친구', period: '2018~2023', cooldownMin: 0, offeringCount: 12 },
-  { name: '낡은 운동화', emoji: '👟', epitaph: '첫 마라톤 완주의 증거', period: '2020~2024', cooldownMin: 423, offeringCount: 5 },
-  { name: '곰 인형', emoji: '🧸', epitaph: '어릴 적 나의 수호자', period: '1998~2015', cooldownMin: 0, offeringCount: 31 },
-  { name: '기타', emoji: '🎸', epitaph: '대학 밴드의 추억', period: '2019~2023', cooldownMin: 187, offeringCount: 8 },
-  { name: '일기장', emoji: '📔', epitaph: '10대의 나를 담은 시간', period: '2015~2020', cooldownMin: 0, offeringCount: 2 },
-  { name: '머그컵', emoji: '☕', epitaph: '매일 아침을 함께한 루틴', period: '2021~2025', cooldownMin: 698, offeringCount: 15 },
-  { name: '카세트 테이프', emoji: '📼', epitaph: '아빠가 녹음해준 목소리', period: '1995~2010', cooldownMin: 0, offeringCount: 0 },
+  { name: '첫 번째 스마트폰', emoji: '📱', epitaph: '고등학교 3년을 함께한 친구', period: '2018~2023', cooldownMin: 0, offeringCount: 12, registered: true },
+  { name: '낡은 운동화', emoji: '👟', epitaph: '첫 마라톤 완주의 증거', period: '2020~2024', cooldownMin: 423, offeringCount: 5, registered: true },
+  { name: '곰 인형', emoji: '🧸', epitaph: '어릴 적 나의 수호자', period: '1998~2015', cooldownMin: 0, offeringCount: 31, registered: true },
+  { name: '기타', emoji: '🎸', epitaph: '대학 밴드의 추억', period: '2019~2023', cooldownMin: 187, offeringCount: 8, registered: true },
+  { name: '일기장', emoji: '📔', epitaph: '10대의 나를 담은 시간', period: '2015~2020', cooldownMin: 0, offeringCount: 2, registered: true },
+  { name: '머그컵', emoji: '☕', epitaph: '매일 아침을 함께한 루틴', period: '2021~2025', cooldownMin: 698, offeringCount: 15, registered: true },
+  { name: '카세트 테이프', emoji: '📼', epitaph: '아빠가 녹음해준 목소리', period: '1995~2010', cooldownMin: 0, offeringCount: 0, registered: true },
 ];
 // cooldownMin: 0 = 헌화 가능, >0 = 남은 쿨다운 분
+// registered: true = 묘비 있는 땅, false = 빈 땅(개간됨, 묘비 미등록)
 
 // Economy calculation
 function calcEconomy() {
@@ -1829,80 +1848,70 @@ function getTossPointStr() {
 // Render graves grid
 function renderGraves() {
   const grid = document.getElementById('gravesGrid');
-  const free = state.freeGraves;
-  const max = state.maxCap === 9999 ? 30 : state.maxCap; // 무제한은 30개로 표시
-  const extra = max - free;
-  const isIconOnly = state.uploadRestriction === 'icon';
+  const openedLands = state.openedLands;
   const decoOff = !state.decorationPhase1;
 
-  // Display: graves data (up to free), then extra slots, then add prompt
   const maxDisplay = 20;
   let html = '';
+  let slotIndex = 0; // 그리드 내 전체 슬롯 인덱스 (animation-delay용)
 
-  // Filled graves (sample data)
-  const dataCount = Math.min(GRAVES_DATA.length, free);
-  GRAVES_DATA.slice(0, dataCount).forEach((g, i) => {
-    const isWilted = g.wilted;
-    const decoEmoji = decoOff ? '' : (i % 3 === 0 ? '🌸' : i % 3 === 1 ? '🌿' : '');
-    const cd = g.cooldownMin;
-    const canOffer = cd === 0;
-    const cdH = Math.floor(cd / 60);
-    const cdM = cd % 60;
-    const cdText = canOffer ? '' : `${String(cdH).padStart(2,'0')}:${String(cdM).padStart(2,'0')}`;
-    html += `<div class="grave-slot free fade-in" style="animation-delay:${i*0.05}s" onclick="openGraveDetail(${i})">
-      ${decoOff && decoEmoji ? '<div class="phase2-badge">Phase 2</div>' : ''}
-      <div class="grave-emoji${decoOff && decoEmoji ? ' greyed':''}">${g.emoji}</div>
-      <div class="grave-name">${g.name}</div>
-      <div class="grave-year">${g.period}</div>
-      ${canOffer
-        ? `<button class="offering-btn available" onclick="event.stopPropagation(); doOffering(${i})">💐 헌화하기</button>`
-        : `<button class="offering-btn cooldown" onclick="event.stopPropagation()">⏳ ${cdText}</button>`
-      }
-    </div>`;
-  });
-
-  // Empty free slots
-  for (let i = dataCount; i < free && i < maxDisplay; i++) {
-    html += `<div class="grave-slot free" style="animation-delay:${i*0.05}s">
-      <div style="font-size:20px;color:#C5E1A5">+</div>
-      <div class="add-slot-label">묘비 추가</div>
-    </div>`;
+  // 개간된 땅 범위 내: 묘비 있는 땅 OR 빈 땅
+  for (let i = 0; i < openedLands && i < maxDisplay; i++) {
+    const g = GRAVES_DATA[i];
+    if (g && g.registered) {
+      // 1. 묘비 있는 땅
+      const decoEmoji = decoOff ? '' : (i % 3 === 0 ? '🌸' : i % 3 === 1 ? '🌿' : '');
+      const cd = g.cooldownMin;
+      const canOffer = cd === 0;
+      const cdH = Math.floor(cd / 60);
+      const cdM = cd % 60;
+      const cdText = canOffer ? '' : `${String(cdH).padStart(2,'0')}:${String(cdM).padStart(2,'0')}`;
+      html += `<div class="grave-slot free fade-in" style="animation-delay:${slotIndex*0.05}s" onclick="openGraveDetail(${i})">
+        ${decoOff && decoEmoji ? '<div class="phase2-badge">Phase 2</div>' : ''}
+        <div class="grave-emoji${decoOff && decoEmoji ? ' greyed':''}">${g.emoji}</div>
+        <div class="grave-name">${g.name}</div>
+        <div class="grave-year">${g.period}</div>
+        ${canOffer
+          ? `<button class="offering-btn available" onclick="event.stopPropagation(); doOffering(${i})">💐 헌화하기</button>`
+          : `<button class="offering-btn cooldown" onclick="event.stopPropagation()">⏳ ${cdText}</button>`
+        }
+      </div>`;
+    } else {
+      // 2. 빈 땅 (개간됨, 묘비 미등록)
+      html += `<div class="grave-slot empty-land fade-in" style="animation-delay:${slotIndex*0.05}s" onclick="openRegister()">
+        <div class="empty-land-plus">+</div>
+        <div class="empty-land-label">탭하여<br>묘비 세우기</div>
+      </div>`;
+    }
+    slotIndex++;
   }
 
-  // Next slot: unlockable or locked
-  if (free < GRAVES_DATA.length) {
-    const nextGrave = GRAVES_DATA[free];
+  // 다음 슬롯: 해금 가능 OR 잠긴 땅
+  if (openedLands < GRAVES_DATA.length) {
     if (state.nextSlotUnlockable) {
-      // Unlockable! Pulsing slot
+      // 4. 해금 가능 (헌화 후 활성화)
+      const nextGrave = GRAVES_DATA[openedLands];
       html += `<div class="grave-slot unlockable fade-in" onclick="unlockNextSlot()">
         <div style="font-size:20px">🔓</div>
         <div class="unlock-label">탭하여 해금!</div>
         <div class="unlock-sub">${nextGrave ? nextGrave.name : '새 묘비'}</div>
       </div>`;
     } else {
-      // Locked
-      const slotCost = 10 + (free - 1) * 10; // 점진적: 10, 20, 30...
+      // 3. 잠긴 땅 (미개간)
       html += `<div class="grave-slot extra" style="opacity:0.6">
         <div style="font-size:14px;color:#A5C880">🔒</div>
         <div class="add-slot-label" style="color:#A5C880;font-size:9px">헌화하면 해금</div>
       </div>`;
     }
+    slotIndex++;
   }
 
-  // More locked slots (preview)
-  const shownSoFar = Math.min(dataCount, free) + (free < GRAVES_DATA.length ? 1 : 0) + (dataCount < free ? (free - dataCount) : 0);
-  const extraPreview = Math.min(3, GRAVES_DATA.length - free - 1);
+  // 추가 잠긴 슬롯 미리보기
+  const extraPreview = Math.min(3, GRAVES_DATA.length - openedLands - 1);
   for (let i = 0; i < extraPreview && i >= 0; i++) {
     html += `<div class="grave-slot extra" style="opacity:0.3">
       <div style="font-size:14px;color:#C5E1A5">🔒</div>
     </div>`;
-  }
-
-  // Overflow indicator (if too many to display)
-  const totalGraves = GRAVES_DATA.length;
-  if (totalGraves > maxDisplay) {
-    const remaining = totalGraves - maxDisplay;
-    html += `<div class="grave-slot overflow-slot">+${remaining}</div>`;
   }
 
   grid.innerHTML = html;
@@ -2017,10 +2026,14 @@ function renderPetalBadge() {
   // Status bar updates
   const sp = document.getElementById('statusPetal');
   if (sp) sp.textContent = eco.weeklyTotal;
+  // 묘비/땅: 등록된 묘비 수 / 개간된 땅 수
+  const registeredCount = GRAVES_DATA.slice(0, state.openedLands).filter(g => g && g.registered).length;
+  const sgEl = document.getElementById('statusGraves');
+  if (sgEl) sgEl.innerHTML = registeredCount + '/<span id="statusMaxFree">' + state.openedLands + '</span>';
   const smf = document.getElementById('statusMaxFree');
-  if (smf) smf.textContent = state.freeGraves;
+  if (smf) smf.textContent = state.openedLands;
   const sal = document.getElementById('statusAdLeft');
-  if (sal) sal.textContent = GRAVES_DATA.length + '기';
+  if (sal) sal.textContent = registeredCount + '기';
   // Action bar updates
   const aa = document.getElementById('actionAttend');
   if (aa) aa.textContent = state.attendanceReward;
@@ -2074,6 +2087,11 @@ function setPill(btn, key, val) {
     state[key] = typeof state[key] === 'number' ? Number(val) : val;
   }
 
+  // freeGraves 변경 시 openedLands도 동기화
+  if (key === 'freeGraves') {
+    state.openedLands = state.freeGraves;
+  }
+
   render();
 }
 
@@ -2103,9 +2121,9 @@ function doOffering(idx) {
   // Set 12h cooldown (720 minutes)
   g.cooldownMin = 720;
   // Check if next slot should become unlockable
-  const usedGraves = Math.min(GRAVES_DATA.length, state.freeGraves);
-  const allOffered = GRAVES_DATA.slice(0, usedGraves).every(gr => gr.cooldownMin > 0);
-  if (allOffered && state.freeGraves < GRAVES_DATA.length) {
+  const registeredGraves = GRAVES_DATA.slice(0, state.openedLands).filter(gr => gr && gr.registered);
+  const allOffered = registeredGraves.every(gr => gr.cooldownMin > 0);
+  if (allOffered && registeredGraves.length > 0 && state.openedLands < GRAVES_DATA.length) {
     state.nextSlotUnlockable = true;
   }
   triggerOfferingEffect();
@@ -2115,16 +2133,27 @@ function doOffering(idx) {
 
 function unlockNextSlot() {
   if (!state.nextSlotUnlockable) return;
-  state.freeGraves += 1;
+  state.openedLands += 1;
   state.nextSlotUnlockable = false;
-  const nextGrave = GRAVES_DATA[state.freeGraves - 1];
-  const name = nextGrave ? nextGrave.name : '새 묘비';
-  showToast(`묘비 자리가 열렸어요! 🪦 ${name}`);
+  showToast(`땅이 개간되었어요! 🌱 묘비를 세울 수 있어요`);
   render();
 }
 
 // Register form
 function openRegister() {
+  // 빈 땅이 있는지 확인 (openedLands 범위 내 registered: false 슬롯)
+  let hasEmptyLand = false;
+  for (let i = 0; i < state.openedLands; i++) {
+    const g = GRAVES_DATA[i];
+    if (!g || !g.registered) {
+      hasEmptyLand = true;
+      break;
+    }
+  }
+  if (!hasEmptyLand) {
+    showToast('열린 땅이 없어요. 개간하면 묘비를 세울 수 있어요 🏗️');
+    return;
+  }
   document.getElementById('registerOverlay').classList.add('open');
 }
 function closeRegister() {
@@ -2144,18 +2173,42 @@ function submitRegister() {
   if (!name) { document.getElementById('regName').focus(); return; }
   const epitaph = document.getElementById('regEpitaph').value.trim();
   if (!epitaph) { document.getElementById('regEpitaph').focus(); return; }
+
+  // 빈 땅 슬롯에 등록 (registered: false → true)
+  let registeredIdx = -1;
+  for (let i = 0; i < state.openedLands; i++) {
+    const g = GRAVES_DATA[i];
+    if (!g || !g.registered) {
+      if (g) {
+        g.name = name;
+        g.epitaph = epitaph;
+        g.registered = true;
+        g.emoji = g.emoji || '📦';
+        g.cooldownMin = 0;
+        g.offeringCount = 0;
+      } else {
+        // GRAVES_DATA에 없는 슬롯이면 추가
+        GRAVES_DATA[i] = { name, emoji: '📦', epitaph, period: '', cooldownMin: 0, offeringCount: 0, registered: true };
+      }
+      registeredIdx = i;
+      break;
+    }
+  }
+
   closeRegister();
 
-  // 묘비 솟아오르기 애니메이션: 첫 번째 묘비 슬롯에 적용
+  // 묘비 솟아오르기 애니메이션
   setTimeout(() => {
-    const firstSlot = document.querySelector('.grave-slot.free');
-    if (firstSlot) {
-      firstSlot.classList.add('grave-rising');
-      spawnRegistrationPetals(firstSlot);
-      setTimeout(() => firstSlot.classList.remove('grave-rising'), 1000);
+    const slots = document.querySelectorAll('.grave-slot.free');
+    const targetSlot = registeredIdx >= 0 ? slots[registeredIdx] : slots[0];
+    if (targetSlot) {
+      targetSlot.classList.add('grave-rising');
+      spawnRegistrationPetals(targetSlot);
+      setTimeout(() => targetSlot.classList.remove('grave-rising'), 1000);
     }
     showToast(`소중한 ${name}이 안치되었어요 🌸`);
   }, 300);
+  render();
 }
 
 function spawnRegistrationPetals(slotEl) {
@@ -2240,9 +2293,9 @@ function doOfferingFromDetail() {
   triggerOfferingEffect();
   showToast(`${g.name}에게 헌화했어요 💐 +${state.rewardAdPetal}꽃잎`);
   // Check unlock
-  const usedGraves = Math.min(GRAVES_DATA.length, state.freeGraves);
-  const allOffered = GRAVES_DATA.slice(0, usedGraves).every(gr => gr.cooldownMin > 0);
-  if (allOffered && state.freeGraves < GRAVES_DATA.length) {
+  const registeredGraves = GRAVES_DATA.slice(0, state.openedLands).filter(gr => gr && gr.registered);
+  const allOffered = registeredGraves.every(gr => gr.cooldownMin > 0);
+  if (allOffered && registeredGraves.length > 0 && state.openedLands < GRAVES_DATA.length) {
     state.nextSlotUnlockable = true;
   }
   closeGraveSheet();
@@ -2315,9 +2368,18 @@ function checkDeleteConfirm() {
 function confirmDelete() {
   if (currentDetailIdx < 0) return;
   const g = GRAVES_DATA[currentDetailIdx];
-  showToast(`${g.name}이 소멸되었어요`);
+  const name = g.name;
+  // 삭제 시 땅은 유지, 묘비만 제거
+  g.registered = false;
+  g.name = '';
+  g.epitaph = '';
+  g.period = '';
+  g.cooldownMin = 0;
+  g.offeringCount = 0;
+  showToast(`${name}이 소멸되었어요. 땅은 남아있어요 🌱`);
   closeDeleteModal();
   closeGraveSheet();
+  render();
 }
 
 function closeDeleteModal() {
