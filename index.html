@@ -1644,11 +1644,10 @@ function renderGraves() {
     </div>`;
   }
 
-  // Overflow indicator
-  const totalShown = Math.min(free, maxDisplay) + extraDisplay;
-  const totalSlots = free + extra;
-  if (totalSlots > maxDisplay) {
-    const remaining = totalSlots - totalShown;
+  // Overflow indicator (if too many to display)
+  const totalGraves = GRAVES_DATA.length;
+  if (totalGraves > maxDisplay) {
+    const remaining = totalGraves - maxDisplay;
     html += `<div class="grave-slot overflow-slot">+${remaining}</div>`;
   }
 
