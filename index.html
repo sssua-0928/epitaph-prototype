@@ -516,6 +516,28 @@
     letter-spacing: 0.5px;
   }
 
+  /* ── UNLOCKABLE SLOT ── */
+  .grave-slot.unlockable {
+    background: rgba(255,255,255,0.7);
+    border: 2px solid var(--petal);
+    cursor: pointer;
+    animation: unlockPulse 2s ease-in-out infinite;
+  }
+  @keyframes unlockPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,180,200,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(255,180,200,0); }
+  }
+  .unlock-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #C2185B;
+    text-align: center;
+  }
+  .unlock-sub {
+    font-size: 8px;
+    color: var(--text-secondary);
+  }
+
   .phase2-badge {
     position: absolute;
     top: 4px;
@@ -1485,7 +1507,8 @@ const state = {
   tossPointPhase1: false,
   decorationPhase1: true,
   dau: 300,
-  activeTab: 'cemetery'
+  activeTab: 'cemetery',
+  nextSlotUnlockable: false  // 헌화 후 다음 슬롯 해금 가능 상태
 };
 
 const GRAVES_DATA = [
@@ -1592,14 +1615,32 @@ function renderGraves() {
     </div>`;
   }
 
-  // Extra (purchase) slots
-  const extraDisplay = Math.min(extra, maxDisplay - Math.min(free, maxDisplay));
-  for (let i = 0; i < extraDisplay; i++) {
-    const slotIdx = free + i;
-    if (slotIdx >= maxDisplay) break;
-    html += `<div class="grave-slot extra" style="animation-delay:${slotIdx*0.04}s">
-      <div style="font-size:14px;color:#A5C880">🪦</div>
-      <div class="add-slot-label" style="color:#A5C880;font-size:9px">+30꽃잎</div>
+  // Next slot: unlockable or locked
+  if (free < GRAVES_DATA.length) {
+    const nextGrave = GRAVES_DATA[free];
+    if (state.nextSlotUnlockable) {
+      // Unlockable! Pulsing slot
+      html += `<div class="grave-slot unlockable fade-in" onclick="unlockNextSlot()">
+        <div style="font-size:20px">🔓</div>
+        <div class="unlock-label">탭하여 해금!</div>
+        <div class="unlock-sub">${nextGrave ? nextGrave.name : '새 묘비'}</div>
+      </div>`;
+    } else {
+      // Locked
+      const slotCost = 10 + (free - 1) * 10; // 점진적: 10, 20, 30...
+      html += `<div class="grave-slot extra" style="opacity:0.6">
+        <div style="font-size:14px;color:#A5C880">🔒</div>
+        <div class="add-slot-label" style="color:#A5C880;font-size:9px">헌화하면 해금</div>
+      </div>`;
+    }
+  }
+
+  // More locked slots (preview)
+  const shownSoFar = Math.min(dataCount, free) + (free < GRAVES_DATA.length ? 1 : 0) + (dataCount < free ? (free - dataCount) : 0);
+  const extraPreview = Math.min(3, GRAVES_DATA.length - free - 1);
+  for (let i = 0; i < extraPreview && i >= 0; i++) {
+    html += `<div class="grave-slot extra" style="opacity:0.3">
+      <div style="font-size:14px;color:#C5E1A5">🔒</div>
     </div>`;
   }
 
@@ -1808,10 +1849,23 @@ function doOffering(idx) {
   if (!g || g.cooldownMin > 0) return;
   // Set 12h cooldown (720 minutes)
   g.cooldownMin = 720;
-  // Add petals
-  const eco = calcEconomy();
+  // Check if next slot should become unlockable
+  const usedGraves = Math.min(GRAVES_DATA.length, state.freeGraves);
+  const allOffered = GRAVES_DATA.slice(0, usedGraves).every(gr => gr.cooldownMin > 0);
+  if (allOffered && state.freeGraves < GRAVES_DATA.length) {
+    state.nextSlotUnlockable = true;
+  }
   showToast(`${g.name}에게 헌화했어요 💐 +${state.rewardAdPetal}꽃잎`);
-  // Re-render
+  render();
+}
+
+function unlockNextSlot() {
+  if (!state.nextSlotUnlockable) return;
+  state.freeGraves += 1;
+  state.nextSlotUnlockable = false;
+  const nextGrave = GRAVES_DATA[state.freeGraves - 1];
+  const name = nextGrave ? nextGrave.name : '새 묘비';
+  showToast(`묘비 자리가 열렸어요! 🪦 ${name}`);
   render();
 }
 
